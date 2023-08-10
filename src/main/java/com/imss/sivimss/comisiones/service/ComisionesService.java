@@ -17,11 +17,11 @@ public interface ComisionesService {
 	
 	Response<Object> detalle(DatosRequest request, Authentication authentication) throws IOException;
 	
-	Response<Object> ordenesServicioInm(DatosRequest request, Authentication authentication) throws IOException;
+	Response<Object> ordenesServicio(DatosRequest request, Authentication authentication) throws IOException;
 	
 	Response<Object> nuevosConveniosPF(DatosRequest request, Authentication authentication) throws IOException;
 	
-	Response<Object> detComisiones(DatosRequest request, Authentication authentication) throws IOException;
+	Response<Object> sumaComisiones(DatosRequest request, Authentication authentication) throws IOException;
 	
 	Response<Object> descargarDocto(DatosRequest request, Authentication authentication) throws IOException;
 

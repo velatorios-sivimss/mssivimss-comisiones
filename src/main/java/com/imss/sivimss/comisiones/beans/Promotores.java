@@ -7,10 +7,16 @@ import java.util.Map;
 import javax.xml.bind.DatatypeConverter;
 
 import com.imss.sivimss.comisiones.util.DatosRequest;
+
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
 import com.imss.sivimss.comisiones.model.request.BusquedaDto;
 import com.imss.sivimss.comisiones.util.AppConstantes;
 
-public class Promotor {
+@NoArgsConstructor
+@Builder
+public class Promotores {
 	
 	private static final Integer NIVEL_DELEGACION = 2;
 	private static final Integer NIVEL_VELATORIO = 3;
@@ -94,6 +100,29 @@ public class Promotor {
     	query.append("FROM SVT_PROMOTOR WHERE 1 = 1 ");
 		
 		return query;
+    }
+    
+    public Map<String, Object> generarReporte(BusquedaDto reporteDto,String nombrePdfReportes, String formatoFecha){
+		Map<String, Object> envioDatos = new HashMap<>();
+		StringBuilder condicion = new StringBuilder("");
+		
+		if (reporteDto.getIdOficina().equals(NIVEL_DELEGACION)) {
+    		condicion.append(" AND ID_DELEGACION = ").append(reporteDto.getIdDelegacion());
+    	} else if (reporteDto.getIdOficina().equals(NIVEL_VELATORIO)) {
+    		condicion.append(" AND ID_VELATORIO = ").append(reporteDto.getIdVelatorio());
+    	}
+		if (reporteDto.getIdPromotor() != null) {
+			condicion.append(" AND ID_PROMOTOR = ").append(reporteDto.getIdPromotor());
+		}
+		if (reporteDto.getFechaInicial() != null) {
+    		condicion.append(" AND DATE(FEC_ALTA) BETWEEN STR_TO_DATE('" + reporteDto.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + reporteDto.getFechaFinal() + "','" + formatoFecha + "')");
+    	}
+	
+		envioDatos.put("condicion", condicion.toString());
+		envioDatos.put("tipoReporte", reporteDto.getTipoReporte());
+		envioDatos.put("rutaNombreReporte", nombrePdfReportes);
+		
+		return envioDatos;
     }
     
 }

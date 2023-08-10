@@ -79,6 +79,50 @@ public class ComisionesController {
 				.supplyAsync(() -> new ResponseEntity<>(response, HttpStatus.valueOf(response.getCodigo())));
 	}
 	
+	@CircuitBreaker(name = "msflujo", fallbackMethod = "fallbackGenerico")
+	@Retry(name = "msflujo", fallbackMethod = "fallbackGenerico")
+	@TimeLimiter(name = "msflujo")
+	@PostMapping("/ordenes")
+	public CompletableFuture<Object> ordenesServicio(@RequestBody DatosRequest request, Authentication authentication) throws IOException {
+		
+		Response<?> response = comisionesService.ordenesServicio(request, authentication);
+		return CompletableFuture
+				.supplyAsync(() -> new ResponseEntity<>(response, HttpStatus.valueOf(response.getCodigo())));
+	}
+	
+	@CircuitBreaker(name = "msflujo", fallbackMethod = "fallbackGenerico")
+	@Retry(name = "msflujo", fallbackMethod = "fallbackGenerico")
+	@TimeLimiter(name = "msflujo")
+	@PostMapping("/convenios-pf")
+	public CompletableFuture<Object> conveniosPf(@RequestBody DatosRequest request, Authentication authentication) throws IOException {
+		
+		Response<?> response = comisionesService.nuevosConveniosPF(request, authentication);
+		return CompletableFuture
+				.supplyAsync(() -> new ResponseEntity<>(response, HttpStatus.valueOf(response.getCodigo())));
+	}
+	
+	@CircuitBreaker(name = "msflujo", fallbackMethod = "fallbackGenerico")
+	@Retry(name = "msflujo", fallbackMethod = "fallbackGenerico")
+	@TimeLimiter(name = "msflujo")
+	@PostMapping("/suma-comi")
+	public CompletableFuture<Object> sumaComisiones(@RequestBody DatosRequest request, Authentication authentication) throws IOException {
+		
+		Response<?> response = comisionesService.sumaComisiones(request, authentication);
+		return CompletableFuture
+				.supplyAsync(() -> new ResponseEntity<>(response, HttpStatus.valueOf(response.getCodigo())));
+	}
+	
+	@CircuitBreaker(name = "msflujo", fallbackMethod = "fallbackGenerico")
+	@Retry(name = "msflujo", fallbackMethod = "fallbackGenerico")
+	@TimeLimiter(name = "msflujo")
+	@PostMapping("/generar-docto")
+	public CompletableFuture<Object> descargarDocto(@RequestBody DatosRequest request, Authentication authentication) throws IOException {
+		
+		Response<?> response = comisionesService.descargarDocto(request, authentication);
+		return CompletableFuture
+				.supplyAsync(() -> new ResponseEntity<>(response, HttpStatus.valueOf(response.getCodigo())));
+	}
+	
 	/**
 	 * fallbacks generico
 	 * 

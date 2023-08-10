@@ -16,5 +16,6 @@ public class BusquedaDto {
 	private Integer idPromotor;
 	private String fechaInicial;
 	private String fechaFinal;
+	private String tipoReporte;
 
 }
