@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +18,14 @@ import com.google.gson.Gson;
 import com.imss.sivimss.comisiones.service.ComisionesService;
 import com.imss.sivimss.comisiones.util.DatosRequest;
 import com.imss.sivimss.comisiones.util.Response;
+import com.imss.sivimss.comisiones.exception.BadRequestException;
 import com.imss.sivimss.comisiones.util.MensajeResponseUtil;
 import com.imss.sivimss.comisiones.util.LogUtil;
 import com.imss.sivimss.comisiones.util.ProviderServiceRestTemplate;
 import com.imss.sivimss.comisiones.beans.Comisiones;
 import com.imss.sivimss.comisiones.beans.Promotores;
 import com.imss.sivimss.comisiones.model.request.BusquedaDto;
+import com.imss.sivimss.comisiones.model.request.ComisionDto;
 import com.imss.sivimss.comisiones.util.AppConstantes;
 
 @Service
@@ -161,11 +164,17 @@ public class ComisionesServiceImpl implements ComisionesService {
 	}
 
 	@Override
-	public Response<Object> sumaComisiones(DatosRequest request, Authentication authentication) throws IOException {
+	public Response<Object> detComisiones(DatosRequest request, Authentication authentication) throws IOException {
+	   Gson gson = new Gson();
+	   String datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
+	   ComisionDto comisionDto = gson.fromJson(datosJson, ComisionDto.class);
+	   if (comisionDto.getIdPromotor() == null) {
+		   throw new BadRequestException(HttpStatus.BAD_REQUEST, "Informacion incompleta");
+	   }
        Comisiones comisiones = new Comisiones();
 		
 		try {
-		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.conveniosPF(request, formatoFecha).getDatos(), urlDominio + CONSULTA, authentication);
+		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.detComisiones(request, comisionDto, formatoFecha).getDatos(), urlDominio + CONSULTA, authentication);
 		} catch (Exception e) {
 			 log.error(e.getMessage());
 		     logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);

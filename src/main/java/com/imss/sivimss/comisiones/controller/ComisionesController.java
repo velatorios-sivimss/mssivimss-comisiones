@@ -104,10 +104,10 @@ public class ComisionesController {
 	@CircuitBreaker(name = "msflujo", fallbackMethod = "fallbackGenerico")
 	@Retry(name = "msflujo", fallbackMethod = "fallbackGenerico")
 	@TimeLimiter(name = "msflujo")
-	@PostMapping("/suma-comi")
+	@PostMapping("/det-comision")
 	public CompletableFuture<Object> sumaComisiones(@RequestBody DatosRequest request, Authentication authentication) throws IOException {
 		
-		Response<?> response = comisionesService.sumaComisiones(request, authentication);
+		Response<?> response = comisionesService.detComisiones(request, authentication);
 		return CompletableFuture
 				.supplyAsync(() -> new ResponseEntity<>(response, HttpStatus.valueOf(response.getCodigo())));
 	}

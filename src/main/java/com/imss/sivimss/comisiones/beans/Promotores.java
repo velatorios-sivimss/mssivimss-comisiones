@@ -47,7 +47,8 @@ public class Promotores {
     	} else if (busqueda.getIdOficina().equals(NIVEL_VELATORIO)) {
     		query.append(" WHERE ID_VELATORIO = ").append(busqueda.getIdVelatorio());
     	}
-    	
+    	query.append(" GROUP BY idPromotor, numEmpleado, curp, nombre, primerApellido, segundoApellido");
+		
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
     	
@@ -66,8 +67,9 @@ public class Promotores {
 			query.append(" AND ID_PROMOTOR = ").append(busqueda.getIdPromotor());
 		}
 		if (busqueda.getFechaInicial() != null) {
-    		query.append(" AND DATE(FEC_ALTA) BETWEEN STR_TO_DATE('" + busqueda.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + busqueda.getFechaFinal() + "','" + formatoFecha + "')");
+    		query.append(" AND DATE(COM.FEC_ALTA) BETWEEN STR_TO_DATE('" + busqueda.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + busqueda.getFechaFinal() + "','" + formatoFecha + "')");
     	}
+		query.append(" GROUP BY idPromotor, numEmpleado, curp, nombre, primerApellido, segundoApellido");
 		
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
@@ -77,17 +79,19 @@ public class Promotores {
 	
 	public DatosRequest detalle(DatosRequest request, String formatoFecha) throws UnsupportedEncodingException {
 		String idPromotor = request.getDatos().get("id").toString();
-		StringBuilder query = new StringBuilder("SELECT PRM.ID_PROMOTOR AS idPromotor, PRM.NUM_EMPLEDO AS numEmpleado, \n");
-		query.append("PRM.DES_CURP AS curp, PRM.NOM_PROMOTOR AS nombre, PRM.NOM_PAPELLIDO AS primerApellido, PRM.NOM_SAPELLIDO AS segundoApellido, \n");
-		query.append("DATE_FORMAT(PRM.FEC_NACIMIENTO,'" + formatoFecha + "') AS fecNacimiento, ");
-		query.append("DATE_FORMAT(PRM.FEC_INGRESO,'" + formatoFecha + "') AS fecIngreso, \n");
-		query.append("PRM.MON_SUELDOBASE AS sueldoBase, DES_VELATORIO AS velatorio, \n");
-		query.append("PRM.DES_CORREO AS correo, PRM.DES_PUESTO AS puesto, PRM.DES_CATEGORIA AS categoria, \n");
-		query.append("DIAS.FEC_PROMOTOR_DIAS_DESCANSO AS diasDescanso, 0 AS montoComision \n");
-		query.append("FROM SVT_PROMOTOR PRM \n");
-		query.append("JOIN SVC_VELATORIO VEL ON VEL.ID_VELATORIO = PRM.ID_VELATORIO \n");
-		query.append("LEFT JOIN SVT_PROMOTOR_DIAS_DESCANSO DIAS ON DIAS.ID_PROMOTOR = PRM.ID_PROMOTOR \n");
-		query.append("WHERE PRM.ID_PROMOTOR = " + idPromotor);
+		StringBuilder query = new StringBuilder("SELECT prm.ID_PROMOTOR AS idPromotor, prm.NUM_EMPLEDO AS numEmpleado, \n");
+		query.append("prm.DES_CURP AS curp, prm.NOM_PROMOTOR AS nombre, prm.NOM_PAPELLIDO AS primerApellido, prm.NOM_SAPELLIDO AS segundoApellido, \n");
+		query.append("DATE_FORMAT(prm.FEC_NACIMIENTO,'" + formatoFecha + "') AS fecNacimiento, ");
+		query.append("DATE_FORMAT(prm.FEC_INGRESO,'" + formatoFecha + "') AS fecIngreso, \n");
+		query.append("prm.MON_SUELDOBASE AS sueldoBase, DES_VELATORIO AS velatorio, \n");
+		query.append("prm.DES_CORREO AS correo, prm.DES_PUESTO AS puesto, prm.DES_CATEGORIA AS categoria, \n");
+		query.append("dias.FEC_PROMOTOR_DIAS_DESCANSO AS diasDescanso, SUM(NUM_CONVENIOS_PF + MON_NUEVOS_CONVENIOS) AS montoComision \n");
+		query.append("FROM SVT_PROMOTOR prm \n");
+		query.append("JOIN SVC_VELATORIO vel ON vel.ID_VELATORIO = prm.ID_VELATORIO \n");
+		query.append("LEFT JOIN SVT_PROMOTOR_DIAS_DESCANSO dias ON dias.ID_PROMOTOR = prm.ID_PROMOTOR \n");
+		query.append("LEFT JOIN SVC_COMISION_MENSUAL comi ON comi.ID_PROMOTOR = prm.ID_PROMOTOR \n");
+		query.append("WHERE prm.ID_PROMOTOR = " + idPromotor);
+		query.append(" AND DATE_FORMAT(comi.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y')");
 		
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
@@ -95,9 +99,12 @@ public class Promotores {
 	}
 
     private StringBuilder armaQuery(String formatoFecha) {
-    	StringBuilder query = new StringBuilder("SELECT ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, \n");
-    	query.append("DES_CURP AS curp, NOM_PROMOTOR AS nombre, NOM_PAPELLIDO AS primerApellido, NOM_SAPELLIDO AS segundoApellido \n");
-    	query.append("FROM SVT_PROMOTOR WHERE 1 = 1 ");
+    	StringBuilder query = new StringBuilder("SELECT PRM.ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, \n");
+    	query.append("DES_CURP AS curp, NOM_PROMOTOR AS nombre, NOM_PAPELLIDO AS primerApellido, NOM_SAPELLIDO AS segundoApellido, \n");
+    	query.append("SUM(MON_COMISION_ODS) AS monComisionODS, SUM(MON_NUEVOS_CONVENIOS) AS monComisionNCPF \n");
+    	query.append("FROM SVT_PROMOTOR PRM \n");
+    	query.append("LEFT JOIN SVC_COMISION_MENSUAL COM ON COM.ID_PROMOTOR = PRM.ID_PROMOTOR \n");
+    	query.append("WHERE 1 = 1 ");
 		
 		return query;
     }
@@ -115,7 +122,7 @@ public class Promotores {
 			condicion.append(" AND ID_PROMOTOR = ").append(reporteDto.getIdPromotor());
 		}
 		if (reporteDto.getFechaInicial() != null) {
-    		condicion.append(" AND DATE(FEC_ALTA) BETWEEN STR_TO_DATE('" + reporteDto.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + reporteDto.getFechaFinal() + "','" + formatoFecha + "')");
+    		condicion.append(" AND DATE(COM.FEC_ALTA) BETWEEN STR_TO_DATE('" + reporteDto.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + reporteDto.getFechaFinal() + "','" + formatoFecha + "')");
     	}
 	
 		envioDatos.put("condicion", condicion.toString());

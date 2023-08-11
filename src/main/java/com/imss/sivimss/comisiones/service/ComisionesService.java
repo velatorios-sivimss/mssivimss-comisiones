@@ -21,7 +21,7 @@ public interface ComisionesService {
 	
 	Response<Object> nuevosConveniosPF(DatosRequest request, Authentication authentication) throws IOException;
 	
-	Response<Object> sumaComisiones(DatosRequest request, Authentication authentication) throws IOException;
+	Response<Object> detComisiones(DatosRequest request, Authentication authentication) throws IOException;
 	
 	Response<Object> descargarDocto(DatosRequest request, Authentication authentication) throws IOException;
 
