@@ -17,7 +17,7 @@ public class Comisiones {
 	
 	public DatosRequest ordenesServicio(DatosRequest request, String formatoFecha) throws UnsupportedEncodingException {
 		String idPromotor = request.getDatos().get("id").toString();
-		StringBuilder query = new StringBuilder("SELECT DATE_FORMAT(os.FEC_ALTA,'" + formatoFecha + "') AS fechaODS, os.CVE_FOLIO AS folioODS, \n ");
+		StringBuilder query = new StringBuilder("SELECT DATE_FORMAT(os.FEC_ALTA,'" + formatoFecha + "') AS fechaODS, os.CVE_FOLIO AS cveFolio, \n ");
 		query.append("CONCAT(NOM_PERSONA,' ',NOM_PRIMER_APELLIDO,' ',NOM_SEGUNDO_APELLIDO) AS nomFinado, \n");
 		query.append("vel.DES_VELATORIO AS lugarCaptacion, pb.DESC_VALOR AS importeODS, IFNULL(SUM(pd.IMP_IMPORTE),0) AS importePagado \n");
 		query.append("FROM SVC_ORDEN_SERVICIO os \n");
@@ -53,7 +53,7 @@ public class Comisiones {
         query.append("LEFT JOIN SVT_PAGO_DETALLE pd ON pb.ID_PAGO_BITACORA = pd.ID_PAGO_BITACORA \n");
         query.append("WHERE cvn.ID_PROMOTOR = " + idPromotor);
         query.append(" AND DATE_FORMAT(comi.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y') \n");
-        query.append(" GROUP BY fechaCPF, cveFolio, nomContratante, lugarCaptacion, importeCPF ");
+        query.append(" GROUP BY fechaCPF, folioNCPF, nomContratante, lugarCaptacion, importeCPF ");
 		
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
