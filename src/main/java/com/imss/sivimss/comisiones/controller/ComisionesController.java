@@ -124,9 +124,7 @@ public class ComisionesController {
 	}
 	
 	@CircuitBreaker(name = "msflujo", fallbackMethod = "fallbackGenerico")
-	@Retry(name = ""
-			+ ""
-			+ "msflujo", fallbackMethod = "fallbackGenerico")
+	@Retry(name = "msflujo", fallbackMethod = "fallbackGenerico")
 	@TimeLimiter(name = "msflujo")
 	@PostMapping("/generar-docto")
 	public CompletableFuture<Object> descargarDocto(@RequestBody DatosRequest request, Authentication authentication) throws IOException {
