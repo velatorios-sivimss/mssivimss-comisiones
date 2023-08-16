@@ -85,7 +85,7 @@ public class Promotores {
 		query.append("DATE_FORMAT(prm.FEC_INGRESO,'" + formatoFecha + "') AS fecIngreso, \n");
 		query.append("prm.MON_SUELDOBASE AS sueldoBase, DES_VELATORIO AS velatorio, \n");
 		query.append("prm.DES_CORREO AS correo, prm.DES_PUESTO AS puesto, prm.DES_CATEGORIA AS categoria, \n");
-		query.append("dias.FEC_PROMOTOR_DIAS_DESCANSO AS diasDescanso, SUM(NUM_CONVENIOS_PF + MON_NUEVOS_CONVENIOS) AS montoComision \n");
+		query.append("dias.FEC_PROMOTOR_DIAS_DESCANSO AS diasDescanso, SUM(MON_COMISION_ODS + MON_COMISION_NCPF) AS montoComision \n");
 		query.append("FROM SVT_PROMOTOR prm \n");
 		query.append("JOIN SVC_VELATORIO vel ON vel.ID_VELATORIO = prm.ID_VELATORIO \n");
 		query.append("LEFT JOIN SVT_PROMOTOR_DIAS_DESCANSO dias ON dias.ID_PROMOTOR = prm.ID_PROMOTOR \n");
@@ -101,7 +101,7 @@ public class Promotores {
     private StringBuilder armaQuery(String formatoFecha) {
     	StringBuilder query = new StringBuilder("SELECT PRM.ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, \n");
     	query.append("DES_CURP AS curp, NOM_PROMOTOR AS nombre, NOM_PAPELLIDO AS primerApellido, NOM_SAPELLIDO AS segundoApellido, \n");
-    	query.append("SUM(MON_COMISION_ODS) AS monComisionODS, SUM(MON_NUEVOS_CONVENIOS) AS monComisionNCPF \n");
+    	query.append("SUM(MON_COMISION_ODS) AS monComisionODS, SUM(MON_COMISION_NCPF) AS monComisionNCPF \n");
     	query.append("FROM SVT_PROMOTOR PRM \n");
     	query.append("LEFT JOIN SVC_COMISION_MENSUAL COM ON COM.ID_PROMOTOR = PRM.ID_PROMOTOR \n");
     	query.append("WHERE 1 = 1 ");
