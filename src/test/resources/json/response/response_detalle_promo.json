@@ -1,0 +1,22 @@
+{
+    "error": false,
+    "codigo": 200,
+    "mensaje": "Exito",
+    "datos": [
+        {
+            "numEmpleado": "1515984159",
+            "primerApellido": "robledo",
+            "velatorio": "GUADALAJARA",
+            "categoria": "",
+            "segundoApellido": "oliva",
+            "montoComision": 6875.0,
+            "nombre": "pedro",
+            "puesto": "",
+            "fecNacimiento": "28/12/1995",
+            "fecIngreso": "01/07/2023",
+            "sueldoBase": 0,
+            "idPromotor": 4,
+            "curp": "roop951285rty"
+        }
+    ]
+}

@@ -109,7 +109,7 @@ public class Promotores {
 		return query;
     }
     
-    public Map<String, Object> generarReporte(BusquedaDto reporteDto,String nombrePdfReportes, String formatoFecha){
+    public Map<String, Object> generarReporte(BusquedaDto reporteDto,String nombrePdfReportes, String formatoFecha) {
 		Map<String, Object> envioDatos = new HashMap<>();
 		StringBuilder condicion = new StringBuilder("");
 		

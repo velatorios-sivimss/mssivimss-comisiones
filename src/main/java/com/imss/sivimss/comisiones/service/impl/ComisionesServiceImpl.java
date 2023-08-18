@@ -32,6 +32,7 @@ import com.imss.sivimss.comisiones.model.request.BusquedaDto;
 import com.imss.sivimss.comisiones.model.request.ComisionDto;
 import com.imss.sivimss.comisiones.model.request.DatosNCPFDto;
 import com.imss.sivimss.comisiones.model.request.DatosODSDto;
+import com.imss.sivimss.comisiones.model.request.ReporteDetalleDto;
 import com.imss.sivimss.comisiones.model.response.CalculoMontosDto;
 import com.imss.sivimss.comisiones.util.AppConstantes;
 
@@ -56,6 +57,8 @@ public class ComisionesServiceImpl implements ComisionesService {
 	private String formatoFecha;
 	
 	private static final String NOMBREPDFREPORTE = "reportes/generales/ReportePromotoresComisiones.jrxml";
+	
+	private static final String NOMBREPDFREPDETALLE = "reportes/generales/ReporteDetalleComisiones.jrxml";
 	
 	private static final String INFONOENCONTRADA = "45";
 	
@@ -242,6 +245,21 @@ public class ComisionesServiceImpl implements ComisionesService {
 		reporteDto.setIdDelegacion(buscaUser.getIdDelegacion());
 		
 		Map<String, Object> envioDatos = new Promotores().generarReporte(reporteDto, NOMBREPDFREPORTE, formatoFecha);
+		Response<Object> response =  (Response<Object>) providerRestTemplate.consumirServicioReportes(envioDatos, urlReportes, authentication);
+		return (Response<Object>) MensajeResponseUtil.mensajeConsultaResponse(response, ERROR_DESCARGA);
+	}
+
+	@Override
+	public Response<Object> descargarDetalle(DatosRequest request, Authentication authentication) throws IOException {
+        Gson gson = new Gson();
+		
+		String datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
+		ReporteDetalleDto repoDetalleDto = gson.fromJson(datosJson, ReporteDetalleDto.class);
+		if (repoDetalleDto.getIdPromotor() == null || repoDetalleDto.getAnioCalculo() == null || repoDetalleDto.getMesCalculo() == null) {
+		    throw new BadRequestException(HttpStatus.BAD_REQUEST, "Informacion incompleta");
+		}
+		
+		Map<String, Object> envioDatos = new Comisiones().generarReporte(repoDetalleDto, NOMBREPDFREPDETALLE);
 		Response<Object> response =  (Response<Object>) providerRestTemplate.consumirServicioReportes(envioDatos, urlReportes, authentication);
 		return (Response<Object>) MensajeResponseUtil.mensajeConsultaResponse(response, ERROR_DESCARGA);
 	}

@@ -11,9 +11,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.imss.sivimss.comisiones.model.request.BusquedaDto;
 import com.imss.sivimss.comisiones.model.request.ComisionDto;
 import com.imss.sivimss.comisiones.model.request.DatosNCPFDto;
 import com.imss.sivimss.comisiones.model.request.DatosODSDto;
+import com.imss.sivimss.comisiones.model.request.ReporteDetalleDto;
 import com.imss.sivimss.comisiones.model.response.CalculoMontosDto;
 import com.imss.sivimss.comisiones.util.AppConstantes;
 import com.imss.sivimss.comisiones.util.DatosRequest;
@@ -206,5 +208,33 @@ public class Comisiones {
 		return request;
 		
 	}
+	
+	public Map<String, Object> generarReporte(ReporteDetalleDto reporteDto, String nombrePdfReportes) {
+		Map<String, Object> envioDatos = new HashMap<>();
+		
+		envioDatos.put("idPromotor", reporteDto.getIdPromotor());
+		envioDatos.put("anioCalculo", reporteDto.getAnioCalculo());
+		envioDatos.put("mesCalculo", reporteDto.getMesCalculo());
+		envioDatos.put("numEmpleado", reporteDto.getNumEmpleado());
+		envioDatos.put("curp", reporteDto.getCurp());
+		envioDatos.put("nombre", reporteDto.getNombre());
+		envioDatos.put("primerApellido", reporteDto.getPrimerApellido());
+		envioDatos.put("segundoApellido", reporteDto.getSegundoApellido());
+		envioDatos.put("sueldoBase", reporteDto.getSueldoBase().toString());
+		envioDatos.put("puesto", reporteDto.getPuesto());
+		envioDatos.put("correo", reporteDto.getCorreo());
+		envioDatos.put("categoria", reporteDto.getCategoria());
+		envioDatos.put("diasDescanso", reporteDto.getDiasDescanso());
+		envioDatos.put("monComison", reporteDto.getMonComision().toString());
+		envioDatos.put("numOrdenesServicio", reporteDto.getNumOrdenesServicio().toString());
+		envioDatos.put("numComveniosPF", reporteDto.getNumConveniosPF().toString());
+		envioDatos.put("monConveniosPF", reporteDto.getMonConveniosPF().getClass());
+		envioDatos.put("monBonoAplicado", reporteDto.getMonBonoAplicado());
+		
+		envioDatos.put("tipoReporte", reporteDto.getTipoReporte());
+		envioDatos.put("rutaNombreReporte", nombrePdfReportes);
+		
+		return envioDatos;
+    }
 	
 }

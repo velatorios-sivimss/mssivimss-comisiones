@@ -1,0 +1,64 @@
+{
+    "error": false,
+    "codigo": 200,
+    "mensaje": "Exito",
+    "datos": {
+        "content": [
+            {
+                "numEmpleado": "2854981981",
+                "primerApellido": "martinez",
+                "monComisionNCPF": 3456.0,
+                "segundoApellido": "aguilar",
+                "monComisionODS": 2345.0,
+                "nombre": "irma",
+                "idPromotor": 3,
+                "curp": "maai951285rty"
+            },
+            {
+                "numEmpleado": "1515984159",
+                "primerApellido": "robledo",
+                "monComisionNCPF": 0.0,
+                "segundoApellido": "oliva",
+                "monComisionODS": 6875.0,
+                "nombre": "pedro",
+                "idPromotor": 4,
+                "curp": "roop951285rty"
+            },
+            {
+                "numEmpleado": "519816519",
+                "primerApellido": "olivas",
+                "monComisionNCPF": 1675.0,
+                "segundoApellido": "kirino",
+                "monComisionODS": 0.0,
+                "nombre": "jorge",
+                "idPromotor": 6,
+                "curp": "olkj951285rty"
+            }
+        ],
+        "pageable": {
+            "sort": {
+                "empty": true,
+                "sorted": false,
+                "unsorted": true
+            },
+            "offset": 0,
+            "pageNumber": 0,
+            "pageSize": 10,
+            "paged": true,
+            "unpaged": false
+        },
+        "last": true,
+        "totalElements": 3,
+        "totalPages": 1,
+        "size": 10,
+        "number": 0,
+        "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+        },
+        "numberOfElements": 3,
+        "first": true,
+        "empty": false
+    }
+}

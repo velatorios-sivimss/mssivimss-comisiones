@@ -1,0 +1,23 @@
+{
+    "error": false,
+    "codigo": 200,
+    "mensaje": "Exito",
+    "datos": [
+        {
+            "lugarCaptacion": "DOCTORES",
+            "folioNCPF": "DOC-000020",
+            "nomContratante": "GEORGINA ELENA CRUZ CERVANTES",
+            "importeCPF": 5000.0,
+            "fechaCPF": "07/08/2023",
+            "importePagado": 0.0
+        },
+        {
+            "lugarCaptacion": "DOCTORES",
+            "folioNCPF": "DOC-000032",
+            "nomContratante": "GEORGINA ELENA CRUZ CERVANTES",
+            "importeCPF": 5000.0,
+            "fechaCPF": "11/08/2023",
+            "importePagado": 0.0
+        }
+    ]
+}
