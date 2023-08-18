@@ -80,7 +80,7 @@ public class Promotores {
 	public DatosRequest detalle(DatosRequest request, String formatoFecha) throws UnsupportedEncodingException {
 		String idPromotor = request.getDatos().get("id").toString();
 		StringBuilder query = new StringBuilder("SELECT prm.ID_PROMOTOR AS idPromotor, prm.NUM_EMPLEDO AS numEmpleado, \n");
-		query.append("prm.DES_CURP AS curp, prm.NOM_PROMOTOR AS nombre, prm.NOM_PAPELLIDO AS primerApellido, prm.NOM_SAPELLIDO AS segundoApellido, \n");
+		query.append("prm.CVE_CURP AS curp, prm.NOM_PROMOTOR AS nombre, prm.NOM_PAPELLIDO AS primerApellido, prm.NOM_SAPELLIDO AS segundoApellido, \n");
 		query.append("DATE_FORMAT(prm.FEC_NACIMIENTO,'" + formatoFecha + "') AS fecNacimiento, ");
 		query.append("DATE_FORMAT(prm.FEC_INGRESO,'" + formatoFecha + "') AS fecIngreso, \n");
 		query.append("prm.MON_SUELDOBASE AS sueldoBase, DES_VELATORIO AS velatorio, \n");
@@ -100,7 +100,7 @@ public class Promotores {
 
     private StringBuilder armaQuery(String formatoFecha) {
     	StringBuilder query = new StringBuilder("SELECT PRM.ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, \n");
-    	query.append("DES_CURP AS curp, NOM_PROMOTOR AS nombre, NOM_PAPELLIDO AS primerApellido, NOM_SAPELLIDO AS segundoApellido, \n");
+    	query.append("CVE_CURP AS curp, NOM_PROMOTOR AS nombre, NOM_PAPELLIDO AS primerApellido, NOM_SAPELLIDO AS segundoApellido, \n");
     	query.append("SUM(MON_COMISION_ODS) AS monComisionODS, SUM(MON_COMISION_NCPF) AS monComisionNCPF \n");
     	query.append("FROM SVT_PROMOTOR PRM \n");
     	query.append("LEFT JOIN SVC_COMISION_MENSUAL COM ON COM.ID_PROMOTOR = PRM.ID_PROMOTOR \n");
