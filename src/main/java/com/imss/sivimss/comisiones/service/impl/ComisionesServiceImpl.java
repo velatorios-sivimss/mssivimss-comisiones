@@ -206,17 +206,19 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   Comisiones comisiones = new Comisiones();
        Response<?> response1 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoODS(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos1 = (ArrayList) response1.getDatos();
-       DatosODSDto datosODSDto = new DatosODSDto((String)datos1.get(0).get("fecIngreso"), (Integer)datos1.get(0).get("numOrdenes"), (Double)datos1.get(0).get("monTotal"));
+       DatosODSDto datosODSDto = datos1.get(0) != null ? 
+    		   new DatosODSDto((String)datos1.get(0).get("fecIngreso"), (Integer)datos1.get(0).get("numOrdenes"), (Double)datos1.get(0).get("monTotal")) : new DatosODSDto();
        
        //comisionDto.setMesCalculo("08"); //Prueba
        Response<?> response2 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoNCPF(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos2 = (ArrayList) response2.getDatos();
-       DatosNCPFDto datosNCPFDto = new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), (Integer)datos2.get(0).get("numBasicos"), (Integer)datos2.get(0).get("numEconomicos"), 
-    		   (Integer)datos2.get(0).get("numCremacion"), (Double)datos2.get(0).get("monBasicos"), (Double)datos2.get(0).get("monEconomicos"), (Double)datos2.get(0).get("monCremacion"));
+       DatosNCPFDto datosNCPFDto = datos2.get(0) != null ? 
+    		   new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), (Integer)datos2.get(0).get("numBasicos"), (Integer)datos2.get(0).get("numEconomicos"), 
+    		   (Integer)datos2.get(0).get("numCremacion"), (Double)datos2.get(0).get("monBasicos"), (Double)datos2.get(0).get("monEconomicos"), (Double)datos2.get(0).get("monCremacion")) : new DatosNCPFDto();
 	   
        CalculoMontosDto calculoMontosDto = new CalculoMontosDto();
        try {
-		   calculoMontosDto.setComisionODS(comisiones.comisionODS(datosODSDto));
+    	   calculoMontosDto.setComisionODS(datosODSDto.getFecIngreso()!=null ? comisiones.comisionODS(datosODSDto) : 0d);
        } catch (ParseException e) {
     	   log.error(e.getMessage());
 		   logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);

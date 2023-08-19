@@ -168,6 +168,9 @@ public class Comisiones {
 	}
 	
 	public Double bonoAplicado(DatosODSDto datosODSDto, DatosNCPFDto datosNCPFDto) {
+		if (datosODSDto.getMonTotal() == null) {
+			datosODSDto.setMonTotal(0d);
+		}
 		Double ingresos = datosODSDto.getMonTotal() + datosNCPFDto.getMonEconomicos() + datosNCPFDto.getMonBasicos() + datosNCPFDto.getMonCremacion();
 		Double bono = 0.0;
 		if (ingresos >= 100000 && ingresos <= 199999) {
@@ -213,23 +216,26 @@ public class Comisiones {
 		Map<String, Object> envioDatos = new HashMap<>();
 		
 		envioDatos.put("idPromotor", reporteDto.getIdPromotor());
-		envioDatos.put("anioCalculo", reporteDto.getAnioCalculo());
-		envioDatos.put("mesCalculo", reporteDto.getMesCalculo());
+		envioDatos.put("anioMesCalculo", reporteDto.getAnioCalculo() + '/' + reporteDto.getMesCalculo());
 		envioDatos.put("numEmpleado", reporteDto.getNumEmpleado());
 		envioDatos.put("curp", reporteDto.getCurp());
 		envioDatos.put("nombre", reporteDto.getNombre());
 		envioDatos.put("primerApellido", reporteDto.getPrimerApellido());
 		envioDatos.put("segundoApellido", reporteDto.getSegundoApellido());
+		envioDatos.put("fecNacimiento", reporteDto.getFecNacimiento());
+		envioDatos.put("fecIngreso", reporteDto.getFecIngreso());
+		envioDatos.put("velatorio", reporteDto.getVelatorio());
 		envioDatos.put("sueldoBase", reporteDto.getSueldoBase().toString());
 		envioDatos.put("puesto", reporteDto.getPuesto());
 		envioDatos.put("correo", reporteDto.getCorreo());
 		envioDatos.put("categoria", reporteDto.getCategoria());
 		envioDatos.put("diasDescanso", reporteDto.getDiasDescanso());
-		envioDatos.put("monComison", reporteDto.getMonComision().toString());
+		envioDatos.put("montoComision", reporteDto.getMonComision().toString());
 		envioDatos.put("numOrdenesServicio", reporteDto.getNumOrdenesServicio().toString());
-		envioDatos.put("numComveniosPF", reporteDto.getNumConveniosPF().toString());
-		envioDatos.put("monConveniosPF", reporteDto.getMonConveniosPF().getClass());
-		envioDatos.put("monBonoAplicado", reporteDto.getMonBonoAplicado());
+		envioDatos.put("monComisionODS", reporteDto.getMonComisionODS().toString());
+		envioDatos.put("numConveniosPF", reporteDto.getNumConveniosPF().toString());
+		envioDatos.put("monConveniosPF", reporteDto.getMonConveniosPF().toString());
+		envioDatos.put("monBonoAplicado", reporteDto.getMonBonoAplicado().toString());
 		
 		envioDatos.put("tipoReporte", reporteDto.getTipoReporte());
 		envioDatos.put("rutaNombreReporte", nombrePdfReportes);
