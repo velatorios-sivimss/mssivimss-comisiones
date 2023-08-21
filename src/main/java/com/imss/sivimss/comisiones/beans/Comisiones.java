@@ -78,7 +78,7 @@ public class Comisiones {
 	public DatosRequest detComisiones(DatosRequest request, ComisionDto comisionDto, String formatoFecha) throws UnsupportedEncodingException {
 		StringBuilder query = new StringBuilder("SELECT NUM_ORDENES_SERVICIO AS numOrdenesServicio, MON_COMISION_ODS AS monComisionODS, \n");
 		query.append("NUM_CONVENIOS_PF AS numConveniosPF, MON_COMISION_NCPF AS monConveniosPF, MON_BONO_APLICADO AS monBonoAplicado \n");
-		query.append("FROM SVC_COMISION_MENSUAL \n");
+		query.append("FROM SVT_COMISION_MENSUAL \n");
 		query.append("WHERE ID_PROMOTOR = " + comisionDto.getIdPromotor());
 		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
 		    query.append(" AND NUM_ANIO_MES = DATE_FORMAT(CURDATE(),'%Y%m')");
@@ -193,7 +193,7 @@ public class Comisiones {
 	public DatosRequest guardarComision(ComisionDto comisionDto, Integer numOrdenes, Integer numConveniosPF, CalculoMontosDto calculoMontosDto) throws UnsupportedEncodingException {
 		DatosRequest request = new DatosRequest();
 		Map<String, Object> parametro = new HashMap<>();
-		final QueryHelper q = new QueryHelper("INSERT INTO SVC_COMISION_MENSUAL");
+		final QueryHelper q = new QueryHelper("INSERT INTO SVT_COMISION_MENSUAL");
 		q.agregarParametroValues("ID_PROMOTOR", comisionDto.getIdPromotor().toString());
 		q.agregarParametroValues("NUM_ANIO_MES", "'"  + comisionDto.getAnioCalculo() + comisionDto.getMesCalculo() + "'" );
 		q.agregarParametroValues("NUM_ORDENES_SERVICIO", numOrdenes.toString());
