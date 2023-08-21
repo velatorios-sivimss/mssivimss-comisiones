@@ -206,15 +206,21 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   Comisiones comisiones = new Comisiones();
        Response<?> response1 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoODS(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos1 = (ArrayList) response1.getDatos();
-       DatosODSDto datosODSDto = datos1.get(0) != null ? 
-    		   new DatosODSDto((String)datos1.get(0).get("fecIngreso"), (Integer)datos1.get(0).get("numOrdenes"), (Double)datos1.get(0).get("monTotal")) : new DatosODSDto();
+       DatosODSDto datosODSDto = 
+    		   new DatosODSDto((String)datos1.get(0).get("fecIngreso"), 
+    				   (Integer)datos1.get(0).get("numOrdenes")==null?0:(Integer)datos1.get(0).get("numOrdenes"), 
+    				   (Double)datos1.get(0).get("monTotal")==null?0:(Double)datos1.get(0).get("monTotal"));
        
        //comisionDto.setMesCalculo("08"); //Prueba
        Response<?> response2 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoNCPF(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos2 = (ArrayList) response2.getDatos();
-       DatosNCPFDto datosNCPFDto = datos2.get(0) != null ? 
-    		   new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), (Integer)datos2.get(0).get("numBasicos"), (Integer)datos2.get(0).get("numEconomicos"), 
-    		   (Integer)datos2.get(0).get("numCremacion"), (Double)datos2.get(0).get("monBasicos"), (Double)datos2.get(0).get("monEconomicos"), (Double)datos2.get(0).get("monCremacion")) : new DatosNCPFDto();
+       DatosNCPFDto datosNCPFDto = new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), 
+    				   (Integer)datos2.get(0).get("numBasicos")==null?0:(Integer)datos2.get(0).get("numBasicos"), 
+    				   (Integer)datos2.get(0).get("numEconomicos")==null?0:(Integer)datos2.get(0).get("numEconomicos"), 
+    		           (Integer)datos2.get(0).get("numCremacion")==null?0:(Integer)datos2.get(0).get("numCremacion"),
+    		           (Double)datos2.get(0).get("monBasicos")==null?0d:(Double)datos2.get(0).get("monBasicos"), 
+    		           (Double)datos2.get(0).get("monEconomicos")==null?0d:(Double)datos2.get(0).get("monEconomicos"), 
+    		           (Double)datos2.get(0).get("monCremacion")==null?0d:(Double)datos2.get(0).get("monCremacion"));
 	   
        CalculoMontosDto calculoMontosDto = new CalculoMontosDto();
        try {
@@ -225,13 +231,19 @@ public class ComisionesServiceImpl implements ComisionesService {
 		   return null;
 	   }
        
-       calculoMontosDto.setComisionNCFP(comisiones.comisionNCPF(datosNCPFDto));
-       calculoMontosDto.setBonoAplicado(comisiones.bonoAplicado(datosODSDto, datosNCPFDto));
-       UsuarioDto usuarioDto = gson.fromJson((String) authentication.getPrincipal(), UsuarioDto.class);
-       calculoMontosDto.setIdUsuarioAlta(usuarioDto.getIdUsuario());
+       try {
+           calculoMontosDto.setComisionNCFP(comisiones.comisionNCPF(datosNCPFDto));
+           calculoMontosDto.setBonoAplicado(comisiones.bonoAplicado(datosODSDto, datosNCPFDto));
+           UsuarioDto usuarioDto = gson.fromJson((String) authentication.getPrincipal(), UsuarioDto.class);
+           calculoMontosDto.setIdUsuarioAlta(usuarioDto.getIdUsuario());
        
-       return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarComision(comisionDto, datosODSDto.getNumOrdenes(), 
+           return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarComision(comisionDto, datosODSDto.getNumOrdenes(), 
     		   datosNCPFDto.getNumEconomicos()+datosNCPFDto.getNumBasicos()+datosNCPFDto.getNumCremacion(), calculoMontosDto).getDatos(), urlDominio + CREAR, authentication);
+       } catch (Exception e) {
+    	   log.error(e.getMessage());
+		   logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);
+		   return null;
+	   }
 	}
 	
 	@Override

@@ -168,9 +168,6 @@ public class Comisiones {
 	}
 	
 	public Double bonoAplicado(DatosODSDto datosODSDto, DatosNCPFDto datosNCPFDto) {
-		if (datosODSDto.getMonTotal() == null) {
-			datosODSDto.setMonTotal(0d);
-		}
 		Double ingresos = datosODSDto.getMonTotal() + datosNCPFDto.getMonEconomicos() + datosNCPFDto.getMonBasicos() + datosNCPFDto.getMonCremacion();
 		Double bono = 0.0;
 		if (ingresos >= 100000 && ingresos <= 199999) {
