@@ -89,7 +89,7 @@ public class Promotores {
 		query.append("FROM SVT_PROMOTOR prm \n");
 		query.append("JOIN SVC_VELATORIO vel ON vel.ID_VELATORIO = prm.ID_VELATORIO \n");
 		query.append("LEFT JOIN SVT_PROMOTOR_DIAS_DESCANSO dias ON dias.ID_PROMOTOR = prm.ID_PROMOTOR \n");
-		query.append("LEFT JOIN SVC_COMISION_MENSUAL comi ON comi.ID_PROMOTOR = prm.ID_PROMOTOR \n");
+		query.append("LEFT JOIN SVT_COMISION_MENSUAL comi ON comi.ID_PROMOTOR = prm.ID_PROMOTOR \n");
 		query.append("WHERE prm.ID_PROMOTOR = " + idPromotor);
 		query.append(" AND DATE_FORMAT(comi.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y')");
 		
@@ -103,13 +103,13 @@ public class Promotores {
     	query.append("DES_CURP AS curp, NOM_PROMOTOR AS nombre, NOM_PAPELLIDO AS primerApellido, NOM_SAPELLIDO AS segundoApellido, \n");
     	query.append("SUM(MON_COMISION_ODS) AS monComisionODS, SUM(MON_COMISION_NCPF) AS monComisionNCPF \n");
     	query.append("FROM SVT_PROMOTOR PRM \n");
-    	query.append("LEFT JOIN SVC_COMISION_MENSUAL COM ON COM.ID_PROMOTOR = PRM.ID_PROMOTOR \n");
+    	query.append("LEFT JOIN SVT_COMISION_MENSUAL COM ON COM.ID_PROMOTOR = PRM.ID_PROMOTOR \n");
     	query.append("WHERE 1 = 1 ");
 		
 		return query;
     }
     
-    public Map<String, Object> generarReporte(BusquedaDto reporteDto,String nombrePdfReportes, String formatoFecha){
+    public Map<String, Object> generarReporte(BusquedaDto reporteDto,String nombrePdfReportes, String formatoFecha) {
 		Map<String, Object> envioDatos = new HashMap<>();
 		StringBuilder condicion = new StringBuilder("");
 		

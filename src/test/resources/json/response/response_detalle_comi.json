@@ -1,0 +1,14 @@
+{
+    "error": false,
+    "codigo": 200,
+    "mensaje": "Exito",
+    "datos": [
+        {
+            "monBonoAplicado": 0.0,
+            "monConveniosPF": 105.0,
+            "monComisionODS": 200.0,
+            "numConveniosPF": 2,
+            "numOrdenesServicio": 2
+        }
+    ]
+}

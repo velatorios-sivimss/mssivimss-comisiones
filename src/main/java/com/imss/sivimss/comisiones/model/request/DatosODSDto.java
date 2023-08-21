@@ -15,5 +15,5 @@ public class DatosODSDto {
 	private String fecIngreso;
 	private Integer numOrdenes;
 	private Double monTotal;
-
+		
 }

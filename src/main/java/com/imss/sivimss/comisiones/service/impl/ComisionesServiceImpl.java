@@ -32,6 +32,7 @@ import com.imss.sivimss.comisiones.model.request.BusquedaDto;
 import com.imss.sivimss.comisiones.model.request.ComisionDto;
 import com.imss.sivimss.comisiones.model.request.DatosNCPFDto;
 import com.imss.sivimss.comisiones.model.request.DatosODSDto;
+import com.imss.sivimss.comisiones.model.request.ReporteDetalleDto;
 import com.imss.sivimss.comisiones.model.response.CalculoMontosDto;
 import com.imss.sivimss.comisiones.util.AppConstantes;
 
@@ -56,6 +57,8 @@ public class ComisionesServiceImpl implements ComisionesService {
 	private String formatoFecha;
 	
 	private static final String NOMBREPDFREPORTE = "reportes/generales/ReportePromotoresComisiones.jrxml";
+	
+	private static final String NOMBREPDFREPDETALLE = "reportes/generales/ReporteDetalleComisiones.jrxml";
 	
 	private static final String INFONOENCONTRADA = "45";
 	
@@ -203,30 +206,44 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   Comisiones comisiones = new Comisiones();
        Response<?> response1 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoODS(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos1 = (ArrayList) response1.getDatos();
-       DatosODSDto datosODSDto = new DatosODSDto((String)datos1.get(0).get("fecIngreso"), (Integer)datos1.get(0).get("numOrdenes"), (Double)datos1.get(0).get("monTotal"));
+       DatosODSDto datosODSDto = 
+    		   new DatosODSDto((String)datos1.get(0).get("fecIngreso"), 
+    				   (Integer)datos1.get(0).get("numOrdenes")==null?0:(Integer)datos1.get(0).get("numOrdenes"), 
+    				   (Double)datos1.get(0).get("monTotal")==null?0:(Double)datos1.get(0).get("monTotal"));
        
        //comisionDto.setMesCalculo("08"); //Prueba
        Response<?> response2 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoNCPF(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos2 = (ArrayList) response2.getDatos();
-       DatosNCPFDto datosNCPFDto = new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), (Integer)datos2.get(0).get("numBasicos"), (Integer)datos2.get(0).get("numEconomicos"), 
-    		   (Integer)datos2.get(0).get("numCremacion"), (Double)datos2.get(0).get("monBasicos"), (Double)datos2.get(0).get("monEconomicos"), (Double)datos2.get(0).get("monCremacion"));
+       DatosNCPFDto datosNCPFDto = new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), 
+    				   (Integer)datos2.get(0).get("numBasicos")==null?0:(Integer)datos2.get(0).get("numBasicos"), 
+    				   (Integer)datos2.get(0).get("numEconomicos")==null?0:(Integer)datos2.get(0).get("numEconomicos"), 
+    		           (Integer)datos2.get(0).get("numCremacion")==null?0:(Integer)datos2.get(0).get("numCremacion"),
+    		           (Double)datos2.get(0).get("monBasicos")==null?0d:(Double)datos2.get(0).get("monBasicos"), 
+    		           (Double)datos2.get(0).get("monEconomicos")==null?0d:(Double)datos2.get(0).get("monEconomicos"), 
+    		           (Double)datos2.get(0).get("monCremacion")==null?0d:(Double)datos2.get(0).get("monCremacion"));
 	   
        CalculoMontosDto calculoMontosDto = new CalculoMontosDto();
        try {
-		   calculoMontosDto.setComisionODS(comisiones.comisionODS(datosODSDto));
+    	   calculoMontosDto.setComisionODS(datosODSDto.getFecIngreso()!=null ? comisiones.comisionODS(datosODSDto) : 0d);
        } catch (ParseException e) {
     	   log.error(e.getMessage());
 		   logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);
 		   return null;
 	   }
        
-       calculoMontosDto.setComisionNCFP(comisiones.comisionNCPF(datosNCPFDto));
-       calculoMontosDto.setBonoAplicado(comisiones.bonoAplicado(datosODSDto, datosNCPFDto));
-       UsuarioDto usuarioDto = gson.fromJson((String) authentication.getPrincipal(), UsuarioDto.class);
-       calculoMontosDto.setIdUsuarioAlta(usuarioDto.getIdUsuario());
+       try {
+           calculoMontosDto.setComisionNCFP(comisiones.comisionNCPF(datosNCPFDto));
+           calculoMontosDto.setBonoAplicado(comisiones.bonoAplicado(datosODSDto, datosNCPFDto));
+           UsuarioDto usuarioDto = gson.fromJson((String) authentication.getPrincipal(), UsuarioDto.class);
+           calculoMontosDto.setIdUsuarioAlta(usuarioDto.getIdUsuario());
        
-       return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarComision(comisionDto, datosODSDto.getNumOrdenes(), 
+           return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarComision(comisionDto, datosODSDto.getNumOrdenes(), 
     		   datosNCPFDto.getNumEconomicos()+datosNCPFDto.getNumBasicos()+datosNCPFDto.getNumCremacion(), calculoMontosDto).getDatos(), urlDominio + CREAR, authentication);
+       } catch (Exception e) {
+    	   log.error(e.getMessage());
+		   logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);
+		   return null;
+	   }
 	}
 	
 	@Override
@@ -242,6 +259,21 @@ public class ComisionesServiceImpl implements ComisionesService {
 		reporteDto.setIdDelegacion(buscaUser.getIdDelegacion());
 		
 		Map<String, Object> envioDatos = new Promotores().generarReporte(reporteDto, NOMBREPDFREPORTE, formatoFecha);
+		Response<Object> response =  (Response<Object>) providerRestTemplate.consumirServicioReportes(envioDatos, urlReportes, authentication);
+		return (Response<Object>) MensajeResponseUtil.mensajeConsultaResponse(response, ERROR_DESCARGA);
+	}
+
+	@Override
+	public Response<Object> descargarDetalle(DatosRequest request, Authentication authentication) throws IOException {
+        Gson gson = new Gson();
+		
+		String datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
+		ReporteDetalleDto repoDetalleDto = gson.fromJson(datosJson, ReporteDetalleDto.class);
+		if (repoDetalleDto.getIdPromotor() == null || repoDetalleDto.getAnioCalculo() == null || repoDetalleDto.getMesCalculo() == null) {
+		    throw new BadRequestException(HttpStatus.BAD_REQUEST, "Informacion incompleta");
+		}
+		
+		Map<String, Object> envioDatos = new Comisiones().generarReporte(repoDetalleDto, NOMBREPDFREPDETALLE);
 		Response<Object> response =  (Response<Object>) providerRestTemplate.consumirServicioReportes(envioDatos, urlReportes, authentication);
 		return (Response<Object>) MensajeResponseUtil.mensajeConsultaResponse(response, ERROR_DESCARGA);
 	}

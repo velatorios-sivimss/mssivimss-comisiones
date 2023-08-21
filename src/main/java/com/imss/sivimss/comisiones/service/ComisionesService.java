@@ -27,4 +27,5 @@ public interface ComisionesService {
 	
 	Response<Object> descargarDocto(DatosRequest request, Authentication authentication) throws IOException;
 
+	Response<Object> descargarDetalle(DatosRequest request, Authentication authentication) throws IOException;
 }

@@ -1,0 +1,52 @@
+{
+    "error": false,
+    "codigo": 200,
+    "mensaje": "Exito",
+    "datos": [
+        {
+            "numEmpleado": "2918518518",
+            "nomPromotor": "ivan gonzalo yaka",
+            "idPromotor": 1
+        },
+        {
+            "numEmpleado": "2918518518",
+            "nomPromotor": "ivan gonzalo yaka",
+            "idPromotor": 2
+        },
+        {
+            "numEmpleado": "2854981981",
+            "nomPromotor": "irma martinez aguilar",
+            "idPromotor": 3
+        },
+        {
+            "numEmpleado": "1515984159",
+            "nomPromotor": "pedro robledo oliva",
+            "idPromotor": 4
+        },
+        {
+            "numEmpleado": "7041518555",
+            "nomPromotor": "tomas eran raya",
+            "idPromotor": 5
+        },
+        {
+            "numEmpleado": "519816519",
+            "nomPromotor": "jorge olivas kirino",
+            "idPromotor": 6
+        },
+        {
+            "numEmpleado": "1234",
+            "nomPromotor": "ED GLEZ REYES",
+            "idPromotor": 9
+        },
+        {
+            "numEmpleado": "1234",
+            "nomPromotor": "MARILIN MANSON MAC",
+            "idPromotor": 10
+        },
+        {
+            "numEmpleado": "1234",
+            "nomPromotor": "CRUZ GOMEZ PEREZ",
+            "idPromotor": 11
+        }
+    ]
+}

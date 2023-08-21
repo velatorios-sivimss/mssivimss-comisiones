@@ -11,9 +11,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.imss.sivimss.comisiones.model.request.BusquedaDto;
 import com.imss.sivimss.comisiones.model.request.ComisionDto;
 import com.imss.sivimss.comisiones.model.request.DatosNCPFDto;
 import com.imss.sivimss.comisiones.model.request.DatosODSDto;
+import com.imss.sivimss.comisiones.model.request.ReporteDetalleDto;
 import com.imss.sivimss.comisiones.model.response.CalculoMontosDto;
 import com.imss.sivimss.comisiones.util.AppConstantes;
 import com.imss.sivimss.comisiones.util.DatosRequest;
@@ -76,7 +78,7 @@ public class Comisiones {
 	public DatosRequest detComisiones(DatosRequest request, ComisionDto comisionDto, String formatoFecha) throws UnsupportedEncodingException {
 		StringBuilder query = new StringBuilder("SELECT NUM_ORDENES_SERVICIO AS numOrdenesServicio, MON_COMISION_ODS AS monComisionODS, \n");
 		query.append("NUM_CONVENIOS_PF AS numConveniosPF, MON_COMISION_NCPF AS monConveniosPF, MON_BONO_APLICADO AS monBonoAplicado \n");
-		query.append("FROM SVC_COMISION_MENSUAL \n");
+		query.append("FROM SVT_COMISION_MENSUAL \n");
 		query.append("WHERE ID_PROMOTOR = " + comisionDto.getIdPromotor());
 		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
 		    query.append(" AND NUM_ANIO_MES = DATE_FORMAT(CURDATE(),'%Y%m')");
@@ -188,7 +190,7 @@ public class Comisiones {
 	public DatosRequest guardarComision(ComisionDto comisionDto, Integer numOrdenes, Integer numConveniosPF, CalculoMontosDto calculoMontosDto) throws UnsupportedEncodingException {
 		DatosRequest request = new DatosRequest();
 		Map<String, Object> parametro = new HashMap<>();
-		final QueryHelper q = new QueryHelper("INSERT INTO SVC_COMISION_MENSUAL");
+		final QueryHelper q = new QueryHelper("INSERT INTO SVT_COMISION_MENSUAL");
 		q.agregarParametroValues("ID_PROMOTOR", comisionDto.getIdPromotor().toString());
 		q.agregarParametroValues("NUM_ANIO_MES", "'"  + comisionDto.getAnioCalculo() + comisionDto.getMesCalculo() + "'" );
 		q.agregarParametroValues("NUM_ORDENES_SERVICIO", numOrdenes.toString());
@@ -206,5 +208,36 @@ public class Comisiones {
 		return request;
 		
 	}
+	
+	public Map<String, Object> generarReporte(ReporteDetalleDto reporteDto, String nombrePdfReportes) {
+		Map<String, Object> envioDatos = new HashMap<>();
+		
+		envioDatos.put("idPromotor", reporteDto.getIdPromotor());
+		envioDatos.put("anioMesCalculo", reporteDto.getAnioCalculo() + '/' + reporteDto.getMesCalculo());
+		envioDatos.put("numEmpleado", reporteDto.getNumEmpleado());
+		envioDatos.put("curp", reporteDto.getCurp());
+		envioDatos.put("nombre", reporteDto.getNombre());
+		envioDatos.put("primerApellido", reporteDto.getPrimerApellido());
+		envioDatos.put("segundoApellido", reporteDto.getSegundoApellido());
+		envioDatos.put("fecNacimiento", reporteDto.getFecNacimiento());
+		envioDatos.put("fecIngreso", reporteDto.getFecIngreso());
+		envioDatos.put("velatorio", reporteDto.getVelatorio());
+		envioDatos.put("sueldoBase", reporteDto.getSueldoBase().toString());
+		envioDatos.put("puesto", reporteDto.getPuesto());
+		envioDatos.put("correo", reporteDto.getCorreo());
+		envioDatos.put("categoria", reporteDto.getCategoria());
+		envioDatos.put("diasDescanso", reporteDto.getDiasDescanso());
+		envioDatos.put("montoComision", reporteDto.getMonComision().toString());
+		envioDatos.put("numOrdenesServicio", reporteDto.getNumOrdenesServicio().toString());
+		envioDatos.put("monComisionODS", reporteDto.getMonComisionODS().toString());
+		envioDatos.put("numConveniosPF", reporteDto.getNumConveniosPF().toString());
+		envioDatos.put("monConveniosPF", reporteDto.getMonConveniosPF().toString());
+		envioDatos.put("monBonoAplicado", reporteDto.getMonBonoAplicado().toString());
+		
+		envioDatos.put("tipoReporte", reporteDto.getTipoReporte());
+		envioDatos.put("rutaNombreReporte", nombrePdfReportes);
+		
+		return envioDatos;
+    }
 	
 }
