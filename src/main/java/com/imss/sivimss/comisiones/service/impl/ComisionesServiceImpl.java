@@ -206,7 +206,7 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   Comisiones comisiones = new Comisiones();
        Response<?> response1 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoODS(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos1 = (ArrayList) response1.getDatos();
-       DatosODSDto datosODSDto = 
+       DatosODSDto datosODSDto = datos1.get(0) == null ? new DatosODSDto() :
     		   new DatosODSDto((String)datos1.get(0).get("fecIngreso"), 
     				   (Integer)datos1.get(0).get("numOrdenes")==null?0:(Integer)datos1.get(0).get("numOrdenes"), 
     				   (Double)datos1.get(0).get("monTotal")==null?0:(Double)datos1.get(0).get("monTotal"));
@@ -214,7 +214,7 @@ public class ComisionesServiceImpl implements ComisionesService {
        //comisionDto.setMesCalculo("08"); //Prueba
        Response<?> response2 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoNCPF(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos2 = (ArrayList) response2.getDatos();
-       DatosNCPFDto datosNCPFDto = new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), 
+       DatosNCPFDto datosNCPFDto = datos2.get(0)==null ? new DatosNCPFDto() : new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), 
     				   (Integer)datos2.get(0).get("numBasicos")==null?0:(Integer)datos2.get(0).get("numBasicos"), 
     				   (Integer)datos2.get(0).get("numEconomicos")==null?0:(Integer)datos2.get(0).get("numEconomicos"), 
     		           (Integer)datos2.get(0).get("numCremacion")==null?0:(Integer)datos2.get(0).get("numCremacion"),
@@ -232,13 +232,19 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   }
        
        try {
-           calculoMontosDto.setComisionNCFP(comisiones.comisionNCPF(datosNCPFDto));
-           calculoMontosDto.setBonoAplicado(comisiones.bonoAplicado(datosODSDto, datosNCPFDto));
+           calculoMontosDto.setComisionNCFP(datosNCPFDto.getFecIngreso()!=null ? comisiones.comisionNCPF(datosNCPFDto) : 0d);
+           calculoMontosDto.setBonoAplicado(datosNCPFDto.getFecIngreso()!=null ? comisiones.bonoAplicado(datosODSDto, datosNCPFDto) : 0d);
            UsuarioDto usuarioDto = gson.fromJson((String) authentication.getPrincipal(), UsuarioDto.class);
            calculoMontosDto.setIdUsuarioAlta(usuarioDto.getIdUsuario());
-       
+           
+           if  (datosNCPFDto.getFecIngreso() == null) {
+                datosNCPFDto.setNumEconomicos(0);
+                datosNCPFDto.setNumBasicos(0);
+                datosNCPFDto.setNumCremacion(0);
+           }
            return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarComision(comisionDto, datosODSDto.getNumOrdenes(), 
-    		   datosNCPFDto.getNumEconomicos()+datosNCPFDto.getNumBasicos()+datosNCPFDto.getNumCremacion(), calculoMontosDto).getDatos(), urlDominio + CREAR, authentication);
+    		   datosNCPFDto.getNumEconomicos()+datosNCPFDto.getNumBasicos()+datosNCPFDto.getNumCremacion(), 
+    		   calculoMontosDto).getDatos(), urlDominio + CREAR, authentication);
        } catch (Exception e) {
     	   log.error(e.getMessage());
 		   logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);

@@ -64,7 +64,7 @@ public class Promotores {
     		query.append(" AND ID_VELATORIO = ").append(busqueda.getIdVelatorio());
     	}
 		if (busqueda.getIdPromotor() != null) {
-			query.append(" AND ID_PROMOTOR = ").append(busqueda.getIdPromotor());
+			query.append(" AND PRM.ID_PROMOTOR = ").append(busqueda.getIdPromotor());
 		}
 		if (busqueda.getFechaInicial() != null) {
     		query.append(" AND DATE(COM.FEC_ALTA) BETWEEN STR_TO_DATE('" + busqueda.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + busqueda.getFechaFinal() + "','" + formatoFecha + "')");
