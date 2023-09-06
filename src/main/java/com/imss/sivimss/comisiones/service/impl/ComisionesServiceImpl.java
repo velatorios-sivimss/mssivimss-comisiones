@@ -180,7 +180,7 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   Gson gson = new Gson();
 	   String datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
 	   ComisionDto comisionDto = gson.fromJson(datosJson, ComisionDto.class);
-	   if (comisionDto.getIdPromotor() == null) {
+	   if (comisionDto.getIdPromotor() == null || comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
 		   throw new BadRequestException(HttpStatus.BAD_REQUEST, "Informacion incompleta");
 	   }
        Comisiones comisiones = new Comisiones();
@@ -211,7 +211,6 @@ public class ComisionesServiceImpl implements ComisionesService {
     				   (Integer)datos1.get(0).get("numOrdenes")==null?0:(Integer)datos1.get(0).get("numOrdenes"), 
     				   (Double)datos1.get(0).get("monTotal")==null?0:(Double)datos1.get(0).get("monTotal"));
        
-       //comisionDto.setMesCalculo("08"); //Prueba
        Response<?> response2 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoNCPF(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos2 = (ArrayList) response2.getDatos();
        DatosNCPFDto datosNCPFDto = new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), 
@@ -241,7 +240,7 @@ public class ComisionesServiceImpl implements ComisionesService {
     		   datosNCPFDto.getNumEconomicos()+datosNCPFDto.getNumBasicos()+datosNCPFDto.getNumCremacion(), calculoMontosDto).getDatos(), urlDominio + CREAR, authentication);
        } catch (Exception e) {
     	   log.error(e.getMessage());
-		   logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);
+		   logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CREAR, authentication);
 		   return null;
 	   }
 	}
@@ -276,6 +275,25 @@ public class ComisionesServiceImpl implements ComisionesService {
 		Map<String, Object> envioDatos = new Comisiones().generarReporte(repoDetalleDto, NOMBREPDFREPDETALLE);
 		Response<Object> response =  (Response<Object>) providerRestTemplate.consumirServicioReportes(envioDatos, urlReportes, authentication);
 		return (Response<Object>) MensajeResponseUtil.mensajeConsultaResponse(response, ERROR_DESCARGA);
+	}
+
+	@Override
+	public Response<Object> guardarDetalle(DatosRequest request, Authentication authentication) throws IOException {
+		Gson gson = new Gson();
+		String datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
+		ComisionDto comisionDto = gson.fromJson(datosJson, ComisionDto.class);
+		if (comisionDto.getIdPromotor() == null || comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
+		   throw new BadRequestException(HttpStatus.BAD_REQUEST, "Informacion incompleta");
+		}
+	      
+		Comisiones comisiones = new Comisiones();
+		try {
+		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarDetalle(comisionDto).getDatos(), urlDominio + CREAR, authentication);
+		} catch (Exception e) {
+			 log.error(e.getMessage());
+		     logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CREAR, authentication);
+			 return null;
+		}
 	}
 
 }

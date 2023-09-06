@@ -79,13 +79,10 @@ public class Comisiones {
 		StringBuilder query = new StringBuilder("SELECT NUM_ORDENES_SERVICIO AS numOrdenesServicio, MON_COMISION_ODS AS monComisionODS, \n");
 		query.append("NUM_CONVENIOS_PF AS numConveniosPF, MON_COMISION_NCPF AS monConveniosPF, MON_BONO_APLICADO AS monBonoAplicado \n");
 		query.append("FROM SVT_COMISION_MENSUAL \n");
-		query.append("WHERE ID_PROMOTOR = " + comisionDto.getIdPromotor());
-		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
-		    query.append(" AND NUM_ANIO_MES = DATE_FORMAT(CURDATE(),'%Y%m')");
-		} else {
-			query.append(" AND NUM_ANIO_MES = ").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo());
-		}
-		
+		query.append("WHERE ID_PROMOTOR = ").append(comisionDto.getIdPromotor());
+		query.append(" AND NUM_ANIO_COMISION = ").append(comisionDto.getAnioCalculo());
+		query.append(" AND NUM_MES_COMISION = ").append(comisionDto.getMesCalculo());
+			
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
 		return request;
@@ -97,7 +94,7 @@ public class Comisiones {
 		query.append("JOIN SVC_INFORMACION_SERVICIO inf ON inf.ID_ORDEN_SERVICIO = os.ID_ORDEN_SERVICIO \n");
 		query.append("JOIN SVT_PAGO_BITACORA pb ON pb.ID_REGISTRO = os.ID_ORDEN_SERVICIO AND pb.ID_FLUJO_PAGOS = 1 \n");
 		query.append("JOIN SVT_PROMOTOR prm ON prm.ID_PROMOTOR = inf.ID_PROMOTORES \n");
-		query.append("WHERE prm.ID_PROMOTOR =" + comisionDto.getIdPromotor());
+		query.append("WHERE prm.ID_PROMOTOR = " + comisionDto.getIdPromotor());
 		query.append(" AND os.ID_ESTATUS_ORDEN_SERVICIO IN (4,6) \n");
 		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
 		    query.append(" AND DATE_FORMAT(os.FEC_ALTA,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')");
@@ -192,7 +189,8 @@ public class Comisiones {
 		Map<String, Object> parametro = new HashMap<>();
 		final QueryHelper q = new QueryHelper("INSERT INTO SVT_COMISION_MENSUAL");
 		q.agregarParametroValues("ID_PROMOTOR", comisionDto.getIdPromotor().toString());
-		q.agregarParametroValues("NUM_ANIO_MES", "'"  + comisionDto.getAnioCalculo() + comisionDto.getMesCalculo() + "'" );
+		q.agregarParametroValues("NUM_ANIO_COMISION",  comisionDto.getAnioCalculo());
+		q.agregarParametroValues("NUM_MES_COMISION", comisionDto.getMesCalculo());
 		q.agregarParametroValues("NUM_ORDENES_SERVICIO", numOrdenes.toString());
 		q.agregarParametroValues("MON_COMISION_ODS", calculoMontosDto.getComisionODS().toString());
 		q.agregarParametroValues("NUM_CONVENIOS_PF", numConveniosPF.toString());
@@ -208,6 +206,29 @@ public class Comisiones {
 		return request;
 		
 	}
+	
+	public DatosRequest guardarDetalle(ComisionDto comisionDto) throws UnsupportedEncodingException {
+		DatosRequest request = new DatosRequest();
+		Map<String, Object> parametro = new HashMap<>();
+		StringBuilder query = new StringBuilder("INSERT INTO SVT_DETALLE_COMISIONES (ID_PROMOTOR, ID_FLUJO_PAGOS, ID_ORDEN_SERVICIO, ");
+		query.append(" NUM_ANIO_COMISION, NUM_MES_COMISION, IMP_TOTAL, MON_COMISION_ODS) \n");
+		query.append(" SELECT ").append(comisionDto.getIdPromotor()).append(", 1, os.ID_ORDEN_SERVICIO, ");
+		query.append(comisionDto.getAnioCalculo()).append(", ").append(comisionDto.getMesCalculo()).append(", pb.DESC_VALOR, com.MON_COMISION_ODS \n");
+		query.append("FROM SVC_ORDEN_SERVICIO os \n");
+		query.append("JOIN SVC_INFORMACION_SERVICIO inf ON inf.ID_ORDEN_SERVICIO = os.ID_ORDEN_SERVICIO \n");
+		query.append("JOIN SVT_PAGO_BITACORA pb ON pb.ID_REGISTRO = inf.ID_ORDEN_SERVICIO AND pb.ID_FLUJO_PAGOS = 1 \n");
+		query.append("JOIN SVT_COMISION_MENSUAL com ON com.ID_PROMOTOR = inf.ID_PROMOTORES AND com.NUM_ANIO_COMISION = ").append(comisionDto.getAnioCalculo());
+		query.append(" AND com.NUM_MES_COMISION = ").append(comisionDto.getMesCalculo()).append(" \n");
+		query.append("WHERE inf.ID_PROMOTORES = ").append(comisionDto.getIdPromotor()).append(" \n");
+		query.append("AND DATE_FORMAT(os.FEC_ALTA,'%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'");
+		
+		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
+		parametro.put(AppConstantes.QUERY, encoded);
+		request.setDatos(parametro);
+		
+		return request;
+	}
+		
 	
 	public Map<String, Object> generarReporte(ReporteDetalleDto reporteDto, String nombrePdfReportes) {
 		Map<String, Object> envioDatos = new HashMap<>();
