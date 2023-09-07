@@ -210,9 +210,9 @@ public class Comisiones {
 	public DatosRequest guardarDetalle(ComisionDto comisionDto) throws UnsupportedEncodingException {
 		DatosRequest request = new DatosRequest();
 		Map<String, Object> parametro = new HashMap<>();
-		StringBuilder query = new StringBuilder("INSERT INTO SVT_DETALLE_COMISIONES (ID_PROMOTOR, ID_FLUJO_PAGOS, ID_ORDEN_SERVICIO, ");
+		StringBuilder query = new StringBuilder("INSERT INTO SVT_DETALLE_COMISIONES (ID_COMISION_MENSUAL, ID_PROMOTOR, ID_FLUJO_PAGOS, ID_ORDEN_SERVICIO, ");
 		query.append(" NUM_ANIO_COMISION, NUM_MES_COMISION, IMP_TOTAL, MON_COMISION_ODS) \n");
-		query.append(" SELECT ").append(comisionDto.getIdPromotor()).append(", 1, os.ID_ORDEN_SERVICIO, ");
+		query.append(" SELECT com.ID_COMISION_MENSUAL, ").append(comisionDto.getIdPromotor()).append(", 1, os.ID_ORDEN_SERVICIO, ");
 		query.append(comisionDto.getAnioCalculo()).append(", ").append(comisionDto.getMesCalculo()).append(", pb.DESC_VALOR, com.MON_COMISION_ODS \n");
 		query.append("FROM SVC_ORDEN_SERVICIO os \n");
 		query.append("JOIN SVC_INFORMACION_SERVICIO inf ON inf.ID_ORDEN_SERVICIO = os.ID_ORDEN_SERVICIO \n");
