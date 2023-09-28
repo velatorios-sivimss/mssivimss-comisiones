@@ -277,7 +277,7 @@ public class ComisionesServiceImpl implements ComisionesService {
 		if (repoDetalleDto.getIdPromotor() == null || repoDetalleDto.getAnioCalculo() == null || repoDetalleDto.getMesCalculo() == null) {
 		    throw new BadRequestException(HttpStatus.BAD_REQUEST, "Informacion incompleta");
 		}
-		
+		log.info(NOMBREPDFREPDETALLE);
 		Map<String, Object> envioDatos = new Comisiones().generarReporte(repoDetalleDto, NOMBREPDFREPDETALLE);
 		Response<Object> response =  (Response<Object>) providerRestTemplate.consumirServicioReportes(envioDatos, urlReportes, authentication);
 		return (Response<Object>) MensajeResponseUtil.mensajeConsultaResponse(response, ERROR_DESCARGA);

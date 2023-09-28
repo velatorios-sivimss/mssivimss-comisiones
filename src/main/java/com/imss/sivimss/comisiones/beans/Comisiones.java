@@ -4,6 +4,9 @@ import java.io.UnsupportedEncodingException;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +34,8 @@ public class Comisiones {
 	private static int montoEconomico = 14;
 	private static int montoBasico = 40;
 	private static int montoCremacion = 65;
+
+	private static final Logger log = LoggerFactory.getLogger(Comisiones.class);
 	
 	public DatosRequest ordenesServicio(DatosRequest request, String formatoFecha) throws UnsupportedEncodingException {
 		String idPromotor = request.getDatos().get("id").toString();
@@ -76,13 +81,18 @@ public class Comisiones {
 	}
 
 	public DatosRequest detComisiones(DatosRequest request, ComisionDto comisionDto, String formatoFecha) throws UnsupportedEncodingException {
-		StringBuilder query = new StringBuilder("SELECT NUM_ORDENES_SERVICIO AS numOrdenesServicio, MON_COMISION_ODS AS monComisionODS, \n");
-		query.append("NUM_CONVENIOS_PF AS numConveniosPF, MON_COMISION_NCPF AS monConveniosPF, MON_BONO_APLICADO AS monBonoAplicado \n");
-		query.append("FROM SVT_COMISION_MENSUAL \n");
-		query.append("WHERE ID_PROMOTOR = ").append(comisionDto.getIdPromotor());
-		query.append(" AND NUM_ANIO_COMISION = ").append(comisionDto.getAnioCalculo());
-		query.append(" AND NUM_MES_COMISION = ").append(comisionDto.getMesCalculo());
-			
+		StringBuilder query = new StringBuilder("SELECT NUM_ORDENES_SERVICIO AS numOrdenesServicio, MON_COMISION_ODS AS monComisionODS, ");
+		query.append("NUM_CONVENIOS_PF AS numConveniosPF, MON_COMISION_NCPF AS monConveniosPF, MON_BONO_APLICADO AS monBonoAplicado ");
+		query.append("FROM SVT_COMISION_MENSUAL ");
+		query.append("WHERE ID_PROMOTOR = " + comisionDto.getIdPromotor());
+		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
+		    query.append(" AND NUM_ANIO_COMISION = DATE_FORMAT(CURDATE(),'%Y')");
+		    query.append(" AND NUM_MES_COMISION = DATE_FORMAT(CURDATE(),'%m')");
+		} else {
+			query.append(" AND NUM_ANIO_COMISION = ").append(comisionDto.getAnioCalculo());
+			query.append(" AND NUM_MES_COMISION = ").append(comisionDto.getMesCalculo());
+		}
+		log.info(query.toString());
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
 		return request;
@@ -235,6 +245,8 @@ public class Comisiones {
 		
 		envioDatos.put("idPromotor", reporteDto.getIdPromotor());
 		envioDatos.put("anioMesCalculo", reporteDto.getAnioCalculo() + '/' + reporteDto.getMesCalculo());
+		envioDatos.put("anioCalculo", reporteDto.getAnioCalculo() );
+		envioDatos.put("mesCalculo", reporteDto.getMesCalculo());
 		envioDatos.put("numEmpleado", reporteDto.getNumEmpleado());
 		envioDatos.put("curp", reporteDto.getCurp());
 		envioDatos.put("nombre", reporteDto.getNombre());
