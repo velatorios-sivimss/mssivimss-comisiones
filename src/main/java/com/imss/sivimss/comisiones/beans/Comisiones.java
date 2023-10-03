@@ -31,49 +31,67 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Comisiones {
 	
-	private static int montoEconomico = 14;
-	private static int montoBasico = 40;
-	private static int montoCremacion = 65;
+	private static final int COMISION_POR_PAQ_ECONOMICO = 14;
+	private static final int COMISION_POR_PAQ_BASICO = 40;
+	private static final int COMISION_POR_PAQ_CREMACION = 65;
 
 	private static final Logger log = LoggerFactory.getLogger(Comisiones.class);
 	
-	public DatosRequest ordenesServicio(DatosRequest request, String formatoFecha) throws UnsupportedEncodingException {
-		String idPromotor = request.getDatos().get("id").toString();
-		StringBuilder query = new StringBuilder("SELECT DATE_FORMAT(os.FEC_ALTA,'" + formatoFecha + "') AS fechaODS, os.CVE_FOLIO AS cveFolio, \n ");
-		query.append("CONCAT(NOM_PERSONA,' ',NOM_PRIMER_APELLIDO,' ',NOM_SEGUNDO_APELLIDO) AS nomFinado, \n");
-		query.append("vel.DES_VELATORIO AS lugarCaptacion, pb.DESC_VALOR AS importeODS, IFNULL(SUM(pd.IMP_PAGO),0) AS importePagado \n");
-		query.append("FROM SVC_ORDEN_SERVICIO os \n");
-		query.append("JOIN SVC_VELATORIO vel ON vel.ID_VELATORIO = os.ID_VELATORIO \n");
-		query.append("JOIN SVC_FINADO fin ON fin.ID_ORDEN_SERVICIO = os.ID_ORDEN_SERVICIO \n");
-		query.append("JOIN SVC_PERSONA per ON per.ID_PERSONA = fin.ID_PERSONA \n");
-		query.append("JOIN SVC_INFORMACION_SERVICIO inf ON inf.ID_ORDEN_SERVICIO = os.ID_ORDEN_SERVICIO \n");
-		query.append("JOIN SVT_PAGO_BITACORA pb ON os.ID_ORDEN_SERVICIO = pb.ID_REGISTRO AND pb.ID_FLUJO_PAGOS = 1 \n");
-		query.append("LEFT JOIN SVT_PAGO_DETALLE pd ON pb.ID_PAGO_BITACORA = pd.ID_PAGO_BITACORA \n");
-		query.append("WHERE inf.ID_PROMOTORES = " + idPromotor);
-		query.append(" AND os.ID_ESTATUS_ORDEN_SERVICIO IN (4,6) \n");
-		query.append(" AND DATE_FORMAT(os.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y') \n" );
-		query.append(" GROUP BY fechaODS, cveFolio, nomFinado, lugarCaptacion, importeODS ");
-		
+	public DatosRequest ordenesServicio(String idPromotor, DatosRequest request, String formatoFecha) throws UnsupportedEncodingException {
+		StringBuilder query = new StringBuilder("SELECT spb.ID_PAGO_BITACORA ,DATE_FORMAT(sos.FEC_ALTA,'%d/%m/%Y') AS fechaODS ");
+				query.append(", sos.CVE_FOLIO AS cveFolio ");
+				query.append(", CONCAT(sp2.NOM_PERSONA,' ',sp2.NOM_PRIMER_APELLIDO,' ',sp2.NOM_SEGUNDO_APELLIDO) AS nomFinado ");
+				query.append(", sv.DES_VELATORIO  AS lugarCaptacion ");
+				query.append(", spb.DESC_VALOR AS importeODS ");
+				query.append(", IFNULL((SELECT SUM(spd.IMP_PAGO) FROM SVT_PROMOTOR sp JOIN SVC_INFORMACION_SERVICIO sis ON sis.ID_PROMOTORES = sp.ID_PROMOTOR  ");
+				query.append(" JOIN SVC_ORDEN_SERVICIO sos ON sos.ID_ORDEN_SERVICIO = sis.ID_ORDEN_SERVICIO  ");
+				query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO = sos.ID_ORDEN_SERVICIO AND spb.ID_FLUJO_PAGOS = 1 ");
+				query.append(" LEFT JOIN SVT_PAGO_DETALLE spd ON spd.ID_PAGO_BITACORA = spb.ID_PAGO_BITACORA  ");
+				query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor + "),0.0) AS importePagado  ");
+				query.append(" FROM SVT_PROMOTOR sp ");
+				query.append(" JOIN SVC_INFORMACION_SERVICIO sis ON sis.ID_PROMOTORES = sp.ID_PROMOTOR  ");
+				query.append(" JOIN SVC_ORDEN_SERVICIO sos ON sos.ID_ORDEN_SERVICIO = sis.ID_ORDEN_SERVICIO  ");
+				query.append(" JOIN SVC_FINADO sf ON sf.ID_ORDEN_SERVICIO = sos.ID_ORDEN_SERVICIO  ");
+				query.append(" JOIN SVC_PERSONA sp2 ON sp2.ID_PERSONA = sf.ID_PERSONA  ");
+				query.append(" JOIN SVC_VELATORIO sv ON sv.ID_VELATORIO = sos.ID_VELATORIO  ");
+				query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO = sos.ID_ORDEN_SERVICIO AND spb.ID_FLUJO_PAGOS = 1  ");
+				query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor + " AND sos.ID_ESTATUS_ORDEN_SERVICIO IN (4,6)  ");
+				query.append(" AND DATE_FORMAT(sos.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y')  ");
+				query.append(" GROUP BY fechaODS, cveFolio, nomFinado, lugarCaptacion, importeODS");
+		log.info(query.toString());
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
 		return request;
 	}
 	
-	public DatosRequest conveniosPF(DatosRequest request, String formatoFecha) throws UnsupportedEncodingException {
-		String idPromotor = request.getDatos().get("id").toString();
-		StringBuilder query = new StringBuilder("SELECT DATE_FORMAT(cvn.FEC_ALTA,'" + formatoFecha + "') AS fechaCPF, cvn.DES_FOLIO AS folioNCPF, \n ");
-		query.append("CONCAT(per.NOM_PERSONA,' ',per.NOM_PRIMER_APELLIDO,' ',per.NOM_SEGUNDO_APELLIDO) AS nomContratante, \n");
-		query.append("vel.DES_VELATORIO AS lugarCaptacion, pb.DESC_VALOR AS importeCPF, IFNULL(SUM(pd.IMP_PAGO),0) AS importePagado \n");
-		query.append("FROM SVT_CONVENIO_PF cvn \n");
-		query.append("JOIN SVC_VELATORIO vel ON vel.ID_VELATORIO = cvn.ID_VELATORIO \n");
-        query.append("JOIN SVT_CONTRATANTE_PAQUETE_CONVENIO_PF cpcf ON cpcf.ID_CONVENIO_PF = cvn.ID_CONVENIO_PF \n");
-        query.append("JOIN SVC_CONTRATANTE con ON con.ID_CONTRATANTE = cpcf.ID_CONTRATANTE \n");
-        query.append("JOIN SVC_PERSONA per ON per.ID_PERSONA = con.ID_PERSONA \n");
-        query.append("JOIN SVT_PAGO_BITACORA pb ON cvn.ID_CONVENIO_PF = pb.ID_REGISTRO AND pb.ID_FLUJO_PAGOS = 2 \n");
-        query.append("LEFT JOIN SVT_PAGO_DETALLE pd ON pb.ID_PAGO_BITACORA = pd.ID_PAGO_BITACORA \n");
-        query.append("WHERE cvn.ID_PROMOTOR = " + idPromotor);
-        query.append(" AND DATE_FORMAT(cvn.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y') \n");
-        query.append(" GROUP BY fechaCPF, folioNCPF, nomContratante, lugarCaptacion, importeCPF ");
+	public DatosRequest conveniosPF(String idPromotor, String formatoFecha, DatosRequest request) throws UnsupportedEncodingException {
+		
+		StringBuilder query = new StringBuilder("SELECT DATE_FORMAT(scp.FEC_ALTA,'%d/%m/%Y') AS fechaCPF ");
+				query.append(", scp.DES_FOLIO AS folioNCPF ");
+				query.append(", CONCAT(sp2.NOM_PERSONA,' ',sp2.NOM_PRIMER_APELLIDO,' ',sp2.NOM_SEGUNDO_APELLIDO) AS nomContratante ");
+				query.append(", sv.DES_VELATORIO AS lugarCaptacion ");
+				query.append(", spb.DESC_VALOR AS importeCPF ");
+				query.append(", IFNULL((SELECT SUM(spb.DESC_VALOR) ");
+				query.append(" FROM SVT_PROMOTOR sp  ");
+				query.append(" JOIN SVT_CONVENIO_PF scp ON scp.ID_PROMOTOR = sp.ID_PROMOTOR  ");
+				query.append(" JOIN SVT_CONTRATANTE_PAQUETE_CONVENIO_PF scpcp ON scpcp.ID_CONVENIO_PF = scp.ID_CONVENIO_PF  ");
+				query.append(" JOIN SVC_CONTRATANTE sc ON sc.ID_CONTRATANTE = scpcp.ID_CONTRATANTE  ");
+				query.append(" JOIN SVC_PERSONA sp2 ON sp2.ID_PERSONA = sc.ID_PERSONA  ");
+				query.append(" JOIN SVC_VELATORIO sv ON sv.ID_VELATORIO = scp.ID_VELATORIO   ");
+				query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO =  scp.ID_CONVENIO_PF  AND spb.ID_FLUJO_PAGOS = 2  ");
+				query.append(" JOIN SVT_PAGO_DETALLE spd ON spd.ID_PAGO_BITACORA = spb.ID_PAGO_BITACORA  ");
+				query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor + " ),0.0) AS importePagado ");
+				query.append(" FROM SVT_PROMOTOR sp  ");
+				query.append(" JOIN SVT_CONVENIO_PF scp ON scp.ID_PROMOTOR = sp.ID_PROMOTOR  ");
+				query.append(" JOIN SVT_CONTRATANTE_PAQUETE_CONVENIO_PF scpcp ON scpcp.ID_CONVENIO_PF = scp.ID_CONVENIO_PF  ");
+				query.append(" JOIN SVC_CONTRATANTE sc ON sc.ID_CONTRATANTE = scpcp.ID_CONTRATANTE  ");
+				query.append(" JOIN SVC_PERSONA sp2 ON sp2.ID_PERSONA = sc.ID_PERSONA  ");
+				query.append(" JOIN SVC_VELATORIO sv ON sv.ID_VELATORIO = scp.ID_VELATORIO   ");
+				query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO =  scp.ID_CONVENIO_PF  AND spb.ID_FLUJO_PAGOS = 2  ");
+				query.append(" JOIN SVT_PAGO_DETALLE spd2 ON spd2.ID_PAGO_BITACORA = spb.ID_PAGO_BITACORA  ");
+				query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor +"  AND DATE_FORMAT(scp.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y')  ");
+				query.append(" GROUP BY fechaCPF, folioNCPF, nomContratante, lugarCaptacion, importeCPF ");
+		log.info(query.toString());
 		
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
@@ -81,10 +99,13 @@ public class Comisiones {
 	}
 
 	public DatosRequest detComisiones(DatosRequest request, ComisionDto comisionDto, String formatoFecha) throws UnsupportedEncodingException {
-		StringBuilder query = new StringBuilder("SELECT NUM_ORDENES_SERVICIO AS numOrdenesServicio, MON_COMISION_ODS AS monComisionODS, ");
-		query.append("NUM_CONVENIOS_PF AS numConveniosPF, MON_COMISION_NCPF AS monConveniosPF, MON_BONO_APLICADO AS monBonoAplicado ");
-		query.append("FROM SVT_COMISION_MENSUAL ");
-		query.append("WHERE ID_PROMOTOR = " + comisionDto.getIdPromotor());
+		StringBuilder query = new StringBuilder("SELECT SUM(scm.NUM_ORDENES_SERVICIO) AS numOrdenesServicio ");
+				query.append(", (SUM(scm.MON_COMISION_ODS) * SUM(scm.NUM_ORDENES_SERVICIO)) AS monComisionODS ");
+				query.append(", SUM(scm.NUM_CONVENIOS_PF) AS numConveniosPF ");
+				query.append(", (SUM(scm.NUM_CONVENIOS_PF) * SUM(scm.MON_COMISION_NCPF)) AS monConveniosPF ");
+				query.append(", SUM(scm.MON_BONO_APLICADO) AS monBonoAplicado ");
+				query.append("FROM SVT_COMISION_MENSUAL scm  ");
+		query.append("WHERE scm.CVE_ESTATUS = 1 AND ID_PROMOTOR = " + comisionDto.getIdPromotor());
 		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
 		    query.append(" AND NUM_ANIO_COMISION = DATE_FORMAT(CURDATE(),'%Y')");
 		    query.append(" AND NUM_MES_COMISION = DATE_FORMAT(CURDATE(),'%m')");
@@ -99,43 +120,48 @@ public class Comisiones {
 	}
 	
 	public DatosRequest datosCalculoODS(DatosRequest request, ComisionDto comisionDto) throws UnsupportedEncodingException {
-		StringBuilder query = new StringBuilder("SELECT prm.FEC_INGRESO AS fecIngreso, COUNT(os.ID_ORDEN_SERVICIO) AS numOrdenes, SUM(pb.DESC_VALOR) AS monTotal \n");
-		query.append("FROM SVC_ORDEN_SERVICIO os \n");
-		query.append("JOIN SVC_INFORMACION_SERVICIO inf ON inf.ID_ORDEN_SERVICIO = os.ID_ORDEN_SERVICIO \n");
-		query.append("JOIN SVT_PAGO_BITACORA pb ON pb.ID_REGISTRO = os.ID_ORDEN_SERVICIO AND pb.ID_FLUJO_PAGOS = 1 \n");
-		query.append("JOIN SVT_PROMOTOR prm ON prm.ID_PROMOTOR = inf.ID_PROMOTORES \n");
-		query.append("WHERE prm.ID_PROMOTOR = " + comisionDto.getIdPromotor());
-		query.append(" AND os.ID_ESTATUS_ORDEN_SERVICIO IN (4,6) \n");
+		StringBuilder query = new StringBuilder("SELECT sp.FEC_INGRESO AS fecIngreso ");
+		query.append(", COUNT(sos.ID_ORDEN_SERVICIO) AS numOrdenes ");
+		query.append(", SUM(spb.DESC_VALOR) AS monTotal ");
+		query.append("FROM SVT_PROMOTOR sp  ");
+		query.append("JOIN SVC_INFORMACION_SERVICIO sis ON sis.ID_PROMOTORES = sp.ID_PROMOTOR  ");
+		query.append("JOIN SVC_ORDEN_SERVICIO sos ON sos.ID_ORDEN_SERVICIO = sis.ID_ORDEN_SERVICIO  ");
+		query.append("JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO = sos.ID_ORDEN_SERVICIO  ");
+		query.append("WHERE sp.ID_PROMOTOR = " + comisionDto.getIdPromotor());
+		query.append(" AND sos.ID_ESTATUS_ORDEN_SERVICIO IN (4,6) ");
 		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
-		    query.append(" AND DATE_FORMAT(os.FEC_ALTA,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')");
+		    query.append(" AND DATE_FORMAT(sos.FEC_ALTA,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')");
 		} else {
-			query.append(" AND DATE_FORMAT(os.FEC_ALTA,'%Y%m') = '").append(comisionDto.getAnioCalculo()).
+			query.append(" AND DATE_FORMAT(sos.FEC_ALTA,'%Y%m') = '").append(comisionDto.getAnioCalculo()).
 			      append(comisionDto.getMesCalculo()).append("'");
 		}
-		
+		log.info("Calcular ODS: " + query.toString());		
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
 		return request;
 	}
 	
 	public DatosRequest datosCalculoNCPF(DatosRequest request, ComisionDto comisionDto) throws UnsupportedEncodingException {
-		StringBuilder query = new StringBuilder("SELECT prm.FEC_INGRESO AS fecIngreso, SUM(IF(cpcf.ID_PAQUETE=7,1,0)) AS numBasicos, \n");
-		query.append("SUM(IF(cpcf.ID_PAQUETE=8,1,0)) AS numEconomicos, SUM(IF(cpcf.ID_PAQUETE=9,1,0)) AS numCremacion, \n");
-		query.append("SUM(IF(cpcf.ID_PAQUETE=7,pb.DESC_VALOR,0)) AS monBasicos, SUM(IF(cpcf.ID_PAQUETE=8,pb.DESC_VALOR,0)) AS monEconomicos, \n");
-		query.append("SUM(IF(cpcf.ID_PAQUETE=9,pb.DESC_VALOR,0)) AS monCremacion \n");
-		query.append("FROM SVT_CONVENIO_PF cvn \n");
-		query.append("JOIN SVT_CONTRATANTE_PAQUETE_CONVENIO_PF cpcf ON cpcf.ID_CONVENIO_PF = cvn.ID_CONVENIO_PF \n");
-		query.append("JOIN SVT_PAGO_BITACORA pb ON pb.ID_REGISTRO = cvn.ID_CONVENIO_PF AND pb.ID_FLUJO_PAGOS = 2 \n");
-		query.append("JOIN SVT_PROMOTOR prm ON prm.ID_PROMOTOR = cvn.ID_PROMOTOR \n");
-		query.append("WHERE prm.ID_PROMOTOR = " + comisionDto.getIdPromotor());
-		query.append(" AND pb.CVE_ESTATUS_PAGO = 5 \n");
+		StringBuilder query = new StringBuilder("SELECT  COUNT(scpcp.ID_CONTRA_PAQ_CONVENIO_PF) AS numCNPF");
+				query.append(" , sp.FEC_INGRESO AS fecIngresoProm ");
+				query.append(" , SUM(IF(scpcp.ID_PAQUETE=7,1,0)) AS numBasicos ");
+				query.append(" , SUM(IF(scpcp.ID_PAQUETE=8,1,0)) AS numEconomicos ");
+				query.append(" , SUM(IF(scpcp.ID_PAQUETE=9,1,0)) AS numCremacion  ");
+				query.append(" , SUM(IF(scpcp.ID_PAQUETE=7,spb.DESC_VALOR,0)) AS monBasicos ");
+				query.append(" , SUM(IF(scpcp.ID_PAQUETE=8,spb.DESC_VALOR,0)) AS monEconomicos  ");
+				query.append(" , SUM(IF(scpcp.ID_PAQUETE=9,spb.DESC_VALOR,0)) AS monCremacion ");
+				query.append(" FROM SVT_PROMOTOR sp  ");
+				query.append(" JOIN SVT_CONVENIO_PF scp ON scp.ID_PROMOTOR = sp.ID_PROMOTOR   ");
+				query.append(" JOIN SVT_CONTRATANTE_PAQUETE_CONVENIO_PF scpcp ON scpcp.ID_CONVENIO_PF = scp.ID_CONVENIO_PF  AND scpcp.ID_PAQUETE IN (7,8,9) ");
+				query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO = scp.ID_CONVENIO_PF AND spb.ID_FLUJO_PAGOS = 2  AND spb.CVE_ESTATUS_PAGO = 5");
+		query.append(" WHERE sp.ID_PROMOTOR = " + comisionDto.getIdPromotor());
 		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
-		    query.append(" AND DATE_FORMAT(cvn.FEC_ALTA,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')");
+		    query.append(" AND DATE_FORMAT(scp.FEC_ALTA,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')");
 		} else {
-			query.append(" AND DATE_FORMAT(cvn.FEC_ALTA,'%Y%m') = '").append(comisionDto.getAnioCalculo()).
+			query.append(" AND DATE_FORMAT(scp.FEC_ALTA,'%Y%m') = '").append(comisionDto.getAnioCalculo()).
 			      append(comisionDto.getMesCalculo()).append("'");
 		}
-		
+		log.info("Calcular NCPF: " + query.toString());			
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
 		return request;
@@ -167,8 +193,8 @@ public class Comisiones {
 	public Double comisionNCPF(DatosNCPFDto datosNCPFDto) {
 		Double comision = 0.0;
 		if (datosNCPFDto.getNumEconomicos() + datosNCPFDto.getNumBasicos() + datosNCPFDto.getNumCremacion() >= 25) {
-			comision = (double) ((datosNCPFDto.getNumEconomicos() * montoEconomico) + (datosNCPFDto.getNumBasicos() * montoBasico) + 
-					datosNCPFDto.getNumCremacion() * montoCremacion);
+			comision = (double) ((datosNCPFDto.getNumEconomicos() * COMISION_POR_PAQ_ECONOMICO) + (datosNCPFDto.getNumBasicos() * COMISION_POR_PAQ_BASICO) + 
+					datosNCPFDto.getNumCremacion() * COMISION_POR_PAQ_CREMACION);
 		}
 		
 		return comision;
@@ -209,6 +235,7 @@ public class Comisiones {
 		q.agregarParametroValues("ID_USUARIO_ALTA", calculoMontosDto.getIdUsuarioAlta().toString());
 		
 		String query = q.obtenerQueryInsertar();
+		log.info("guardarComision: " + query.toString());		
 		String encoded = DatatypeConverter.printBase64Binary(query.getBytes("UTF-8"));
 		parametro.put(AppConstantes.QUERY, encoded);
 		request.setDatos(parametro);
@@ -217,20 +244,40 @@ public class Comisiones {
 		
 	}
 	
-	public DatosRequest guardarDetalle(ComisionDto comisionDto) throws UnsupportedEncodingException {
+	public DatosRequest updateEstatusComisionMensual(ComisionDto comisionDto) throws UnsupportedEncodingException {
+		DatosRequest request = new DatosRequest();
+		Map<String, Object> parametro = new HashMap<>();
+		final QueryHelper q = new QueryHelper("UPDATE SVT_COMISION_MENSUAL");
+		q.agregarParametroValues("CVE_ESTATUS", "0");
+		q.addWhere("ID_PROMOTOR = " + comisionDto.getIdPromotor());
+		q.addColumn("NUM_ANIO_COMISION", comisionDto.getAnioCalculo());
+		q.addColumn("NUM_MES_COMISION", comisionDto.getMesCalculo());
+		String query = q.obtenerQueryActualizar();
+		
+		log.info("guardarComision: " + query.toString());		
+		String encoded = DatatypeConverter.printBase64Binary(query.getBytes("UTF-8"));
+		parametro.put(AppConstantes.QUERY, encoded);
+		request.setDatos(parametro);
+		
+		return request;
+	}
+	
+	public DatosRequest guardarDetalleODS(ComisionDto comisionDto) throws UnsupportedEncodingException {
 		DatosRequest request = new DatosRequest();
 		Map<String, Object> parametro = new HashMap<>();
 		StringBuilder query = new StringBuilder("INSERT INTO SVT_DETALLE_COMISIONES (ID_COMISION_MENSUAL, ID_PROMOTOR, ID_FLUJO_PAGOS, ID_ORDEN_SERVICIO, ");
-		query.append(" NUM_ANIO_COMISION, NUM_MES_COMISION, IMP_TOTAL, MON_COMISION_ODS) \n");
-		query.append(" SELECT com.ID_COMISION_MENSUAL, ").append(comisionDto.getIdPromotor()).append(", 1, os.ID_ORDEN_SERVICIO, ");
-		query.append(comisionDto.getAnioCalculo()).append(", ").append(comisionDto.getMesCalculo()).append(", pb.DESC_VALOR, com.MON_COMISION_ODS \n");
-		query.append("FROM SVC_ORDEN_SERVICIO os \n");
-		query.append("JOIN SVC_INFORMACION_SERVICIO inf ON inf.ID_ORDEN_SERVICIO = os.ID_ORDEN_SERVICIO \n");
-		query.append("JOIN SVT_PAGO_BITACORA pb ON pb.ID_REGISTRO = inf.ID_ORDEN_SERVICIO AND pb.ID_FLUJO_PAGOS = 1 \n");
-		query.append("JOIN SVT_COMISION_MENSUAL com ON com.ID_PROMOTOR = inf.ID_PROMOTORES AND com.NUM_ANIO_COMISION = ").append(comisionDto.getAnioCalculo());
-		query.append(" AND com.NUM_MES_COMISION = ").append(comisionDto.getMesCalculo()).append(" \n");
-		query.append("WHERE inf.ID_PROMOTORES = ").append(comisionDto.getIdPromotor()).append(" \n");
-		query.append("AND DATE_FORMAT(os.FEC_ALTA,'%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'");
+		query.append(" NUM_ANIO_COMISION, NUM_MES_COMISION, IMP_TOTAL, MON_COMISION_ODS) ");
+		query.append(" SELECT scm.ID_COMISION_MENSUAL, sp.ID_PROMOTOR, 1 AS flujoPagos ");
+		query.append(", sos.ID_ORDEN_SERVICIO, ").append(comisionDto.getAnioCalculo()).append(", ");
+		query.append(comisionDto.getMesCalculo()).append(", spb.DESC_VALOR, scm.MON_COMISION_ODS ");
+		query.append(" FROM SVT_PROMOTOR sp");
+		query.append(" JOIN SVC_INFORMACION_SERVICIO sis ON sis.ID_PROMOTORES = sp.ID_PROMOTOR ");
+		query.append(" JOIN SVC_ORDEN_SERVICIO sos ON sos.ID_ORDEN_SERVICIO = sis.ID_ORDEN_SERVICIO AND sos.ID_ESTATUS_ORDEN_SERVICIO IN (4,6) AND DATE_FORMAT(sos.FEC_ALTA, '%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'");
+		query.append("JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO = sos.ID_ORDEN_SERVICIO ");
+		query.append("JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR AND DATE_FORMAT(scm.FEC_ALTA, '%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'").append(" AND scm.CVE_ESTATUS = 1 ");
+		query.append(" WHERE sp.ID_PROMOTOR = ").append(comisionDto.getIdPromotor());
+		
+		log.info("guardarDetalle: " + query.toString());	
 		
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		parametro.put(AppConstantes.QUERY, encoded);
@@ -238,7 +285,31 @@ public class Comisiones {
 		
 		return request;
 	}
+	
+
+	public DatosRequest guardarDetalleCNPF(ComisionDto comisionDto) throws UnsupportedEncodingException {
+		DatosRequest request = new DatosRequest();
+		Map<String, Object> parametro = new HashMap<>();
+		StringBuilder query = new StringBuilder("INSERT INTO SVT_DETALLE_COMISIONES (ID_COMISION_MENSUAL, ID_PROMOTOR, ID_FLUJO_PAGOS, ID_ORDEN_SERVICIO, ");
+		query.append(" NUM_ANIO_COMISION, NUM_MES_COMISION, IMP_TOTAL, MON_COMISION_ODS) ");
+		query.append(" SELECT scm.ID_COMISION_MENSUAL, sp.ID_PROMOTOR, 1 AS flujoPagos ");
+		query.append(", scp.ID_CONVENIO_PF, ").append(comisionDto.getAnioCalculo()).append(", ");
+		query.append(comisionDto.getMesCalculo()).append(", spb.DESC_VALOR, scm.MON_COMISION_ODS ");
+		query.append(" FROM	SVT_PROMOTOR sp ");
+		query.append(" JOIN SVT_CONVENIO_PF scp ON scp.ID_PROMOTOR = sp.ID_PROMOTOR ");
+		query.append(" JOIN SVT_CONTRATANTE_PAQUETE_CONVENIO_PF scpcp ON scpcp.ID_CONVENIO_PF = scp.ID_CONVENIO_PF AND scpcp.ID_PAQUETE IN (7,8,9) ");
+		query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO = scp.ID_CONVENIO_PF AND spb.ID_FLUJO_PAGOS = 2 AND spb.CVE_ESTATUS_PAGO = 5 ");
+		query.append(" JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR AND DATE_FORMAT(scm.FEC_ALTA, '%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'").append(" AND scm.CVE_ESTATUS = 1 ");
+		query.append(" WHERE sp.ID_PROMOTOR = ").append(comisionDto.getIdPromotor());
 		
+		log.info("guardarDetalle: " + query.toString());	
+		
+		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
+		parametro.put(AppConstantes.QUERY, encoded);
+		request.setDatos(parametro);
+		
+		return request;
+	}
 	
 	public Map<String, Object> generarReporte(ReporteDetalleDto reporteDto, String nombrePdfReportes) {
 		Map<String, Object> envioDatos = new HashMap<>();
@@ -272,5 +343,4 @@ public class Comisiones {
 		
 		return envioDatos;
     }
-	
 }

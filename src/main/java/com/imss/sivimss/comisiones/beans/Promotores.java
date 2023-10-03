@@ -6,6 +6,9 @@ import java.util.Map;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.imss.sivimss.comisiones.util.DatosRequest;
 
 import lombok.Builder;
@@ -20,19 +23,27 @@ public class Promotores {
 	
 	private static final Integer NIVEL_DELEGACION = 2;
 	private static final Integer NIVEL_VELATORIO = 3;
+
+	private static final Logger log = LoggerFactory.getLogger(Promotores.class);
 	
 	public DatosRequest listaPromotores(BusquedaDto busqueda) throws UnsupportedEncodingException {
 		DatosRequest request = new DatosRequest();
 		Map<String, Object> parametro = new HashMap<>();
-    	StringBuilder query = new StringBuilder("SELECT ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, \n");
-    	query.append("CONCAT(NOM_PROMOTOR,' ',NOM_PAPELLIDO,' ',NOM_SAPELLIDO) AS nomPromotor \n");
-    	query.append("FROM SVT_PROMOTOR \n");
-    	if (busqueda.getIdOficina().equals(NIVEL_DELEGACION)) {
+    	StringBuilder query = new StringBuilder("SELECT ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, ");
+    	query.append("CONCAT(NOM_PROMOTOR,' ',NOM_PAPELLIDO,' ',NOM_SAPELLIDO) AS nomPromotor ");
+    	query.append("FROM SVT_PROMOTOR ");
+    	if (busqueda.getIdDelegacion() != null) {
     		query.append(" WHERE ID_DELEGACION = ").append(busqueda.getIdDelegacion());
-    	} else if (busqueda.getIdOficina().equals(NIVEL_VELATORIO)) {
+    		if(busqueda.getIdVelatorio() != null)
+        		query.append(" AND ID_VELATORIO = ").append(busqueda.getIdVelatorio());
+    		query.append(" AND IND_ACTIVO =  1");
+    	}else if(busqueda.getIdVelatorio() != null) {
     		query.append(" WHERE ID_VELATORIO = ").append(busqueda.getIdVelatorio());
-    	}
-    	
+    		query.append(" AND IND_ACTIVO =  1");
+    	}else 
+    		query.append(" WHERE IND_ACTIVO =  1");
+
+		log.info(query.toString());
     	String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		parametro.put(AppConstantes.QUERY, encoded);
 		request.setDatos(parametro);
@@ -41,14 +52,22 @@ public class Promotores {
 	
 	public DatosRequest consulta(DatosRequest request, BusquedaDto busqueda, String formatoFecha) throws UnsupportedEncodingException {
 		StringBuilder query = armaQuery(formatoFecha);
-	
-		if (busqueda.getIdOficina().equals(NIVEL_DELEGACION)) {
-    		query.append(" WHERE ID_DELEGACION = ").append(busqueda.getIdDelegacion());
-    	} else if (busqueda.getIdOficina().equals(NIVEL_VELATORIO)) {
-    		query.append(" WHERE ID_VELATORIO = ").append(busqueda.getIdVelatorio());
-    	}
+
+		if(busqueda.getIdDelegacion()!= null)
+    		query.append(" AND ID_DELEGACION = ").append(busqueda.getIdDelegacion());
+		if (busqueda.getIdVelatorio() != null)
+    		query.append(" AND ID_VELATORIO = ").append(busqueda.getIdVelatorio());
+		if (busqueda.getIdPromotor() != null)
+			query.append(" AND sp.ID_PROMOTOR = ").append(busqueda.getIdPromotor());
+		if (busqueda.getFechaInicial() != null && busqueda.getFechaFinal() != null)
+    		query.append(" AND DATE(scm.FEC_ALTA) BETWEEN STR_TO_DATE('" + busqueda.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + busqueda.getFechaFinal() + "','" + formatoFecha + "')");
+		else if (busqueda.getFechaInicial() != null && busqueda.getFechaFinal() == null)
+			query.append(" AND DATE(scm.FEC_ALTA) >= STR_TO_DATE('" + busqueda.getFechaInicial() + "','" + formatoFecha + "')");
+		else if (busqueda.getFechaInicial() == null && busqueda.getFechaFinal() != null)
+			query.append(" AND DATE(scm.FEC_ALTA) <= STR_TO_DATE('" + busqueda.getFechaFinal() + "','" + formatoFecha + "')");
     	query.append(" GROUP BY idPromotor, numEmpleado, curp, nombre, primerApellido, segundoApellido");
-		
+
+		log.info(query.toString());
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
     	
@@ -58,19 +77,21 @@ public class Promotores {
 	public DatosRequest busqueda(DatosRequest request, BusquedaDto busqueda, String formatoFecha) throws UnsupportedEncodingException {
 		StringBuilder query = armaQuery(formatoFecha);
 		
-		if (busqueda.getIdOficina().equals(NIVEL_DELEGACION)) {
+		if(busqueda.getIdDelegacion()!= null)
     		query.append(" AND ID_DELEGACION = ").append(busqueda.getIdDelegacion());
-    	} else if (busqueda.getIdOficina().equals(NIVEL_VELATORIO)) {
+		if (busqueda.getIdVelatorio() != null)
     		query.append(" AND ID_VELATORIO = ").append(busqueda.getIdVelatorio());
-    	}
-		if (busqueda.getIdPromotor() != null) {
-			query.append(" AND PRM.ID_PROMOTOR = ").append(busqueda.getIdPromotor());
-		}
-		if (busqueda.getFechaInicial() != null) {
-    		query.append(" AND DATE(COM.FEC_ALTA) BETWEEN STR_TO_DATE('" + busqueda.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + busqueda.getFechaFinal() + "','" + formatoFecha + "')");
-    	}
-		query.append(" GROUP BY idPromotor, numEmpleado, curp, nombre, primerApellido, segundoApellido");
+		if (busqueda.getIdPromotor() != null)
+			query.append(" AND sp.ID_PROMOTOR = ").append(busqueda.getIdPromotor());
+		if (busqueda.getFechaInicial() != null && busqueda.getFechaFinal() != null)
+    		query.append(" AND DATE(scm.FEC_ALTA) BETWEEN STR_TO_DATE('" + busqueda.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + busqueda.getFechaFinal() + "','" + formatoFecha + "')");
+		else if (busqueda.getFechaInicial() != null && busqueda.getFechaFinal() == null)
+			query.append(" AND DATE(scm.FEC_ALTA) >= STR_TO_DATE('" + busqueda.getFechaInicial() + "','" + formatoFecha + "')");
+		else if (busqueda.getFechaInicial() == null && busqueda.getFechaFinal() != null)
+			query.append(" AND DATE(scm.FEC_ALTA) <= STR_TO_DATE('" + busqueda.getFechaFinal() + "','" + formatoFecha + "')");
 		
+		query.append(" GROUP BY idPromotor, numEmpleado, curp, nombre, primerApellido, segundoApellido");
+		log.info(query.toString());
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
     	
@@ -79,31 +100,28 @@ public class Promotores {
 	
 	public DatosRequest detalle(DatosRequest request, String formatoFecha) throws UnsupportedEncodingException {
 		String idPromotor = request.getDatos().get("id").toString();
-		StringBuilder query = new StringBuilder("SELECT prm.ID_PROMOTOR AS idPromotor, prm.NUM_EMPLEDO AS numEmpleado, \n");
-		query.append("prm.CVE_CURP AS curp, prm.NOM_PROMOTOR AS nombre, prm.NOM_PAPELLIDO AS primerApellido, prm.NOM_SAPELLIDO AS segundoApellido, \n");
-		query.append("DATE_FORMAT(prm.FEC_NACIMIENTO,'" + formatoFecha + "') AS fecNacimiento, ");
-		query.append("DATE_FORMAT(prm.FEC_INGRESO,'" + formatoFecha + "') AS fecIngreso, \n");
-		query.append("prm.MON_SUELDOBASE AS sueldoBase, DES_VELATORIO AS velatorio, \n");
-		query.append("prm.DES_CORREO AS correo, prm.DES_PUESTO AS puesto, prm.DES_CATEGORIA AS categoria, \n");
-		query.append("dias.FEC_PROMOTOR_DIAS_DESCANSO AS diasDescanso, SUM(MON_COMISION_ODS + MON_COMISION_NCPF) AS montoComision \n");
-		query.append("FROM SVT_PROMOTOR prm \n");
-		query.append("JOIN SVC_VELATORIO vel ON vel.ID_VELATORIO = prm.ID_VELATORIO \n");
-		query.append("LEFT JOIN SVT_PROMOTOR_DIAS_DESCANSO dias ON dias.ID_PROMOTOR = prm.ID_PROMOTOR \n");
-		query.append("LEFT JOIN SVT_COMISION_MENSUAL comi ON comi.ID_PROMOTOR = prm.ID_PROMOTOR \n");
-		query.append("WHERE prm.ID_PROMOTOR = " + idPromotor);
-		query.append(" AND DATE_FORMAT(comi.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y')");
-		
+		StringBuilder query = new StringBuilder("SELECT sp.ID_PROMOTOR AS idPromotor, sp.NUM_EMPLEDO AS numEmpleado,");
+		query.append("sp.CVE_CURP AS curp, sp.NOM_PROMOTOR AS nombre, sp.NOM_PAPELLIDO AS primerApellido, sp.NOM_SAPELLIDO AS segundoApellido, ");
+		query.append("DATE_FORMAT(sp.FEC_NACIMIENTO,'" + formatoFecha + "') AS fecNacimiento, ");
+		query.append("DATE_FORMAT(sp.FEC_INGRESO,'" + formatoFecha + "') AS fecIngreso, ");
+		query.append("sp.MON_SUELDOBASE AS sueldoBase, sv.DES_VELATORIO AS velatorio, (SELECT COUNT(spdd.ID_PROMOTOR_DIAS_DESCANSO) FROM SVT_PROMOTOR_DIAS_DESCANSO spdd WHERE spdd.ID_PROMOTOR = " + idPromotor + ") AS diasDescanso");
+		query.append(",sp.DES_CORREO AS correo, sp.DES_PUESTO AS puesto, sp.DES_CATEGORIA AS categoria");
+		query.append(",(SELECT SUM(scm.MON_COMISION_ODS + scm.MON_COMISION_NCPF) FROM SVT_COMISION_MENSUAL scm WHERE scm.CVE_ESTATUS = 1 AND scm.ID_PROMOTOR = " + idPromotor + " AND DATE_FORMAT(scm.FEC_ALTA, '%m/%Y') = DATE_FORMAT(CURDATE(), '%m/%Y')) AS montoComision");
+		query.append(" FROM SVT_PROMOTOR sp ");
+		query.append(" JOIN SVC_VELATORIO sv ON sv.ID_VELATORIO = sp.ID_VELATORIO "); 
+		query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor);
+		log.info(query.toString());
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
 		return request;
 	}
 
     private StringBuilder armaQuery(String formatoFecha) {
-    	StringBuilder query = new StringBuilder("SELECT PRM.ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, \n");
-    	query.append("CVE_CURP AS curp, NOM_PROMOTOR AS nombre, NOM_PAPELLIDO AS primerApellido, NOM_SAPELLIDO AS segundoApellido, \n");
-    	query.append("SUM(MON_COMISION_ODS) AS monComisionODS, SUM(MON_COMISION_NCPF) AS monComisionNCPF \n");
-    	query.append("FROM SVT_PROMOTOR PRM \n");
-    	query.append("LEFT JOIN SVT_COMISION_MENSUAL COM ON COM.ID_PROMOTOR = PRM.ID_PROMOTOR \n");
+    	StringBuilder query = new StringBuilder("SELECT sp.ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, ");
+    	query.append("sp.CVE_CURP AS curp, sp.NOM_PROMOTOR AS nombre, sp.NOM_PAPELLIDO AS primerApellido, sp.NOM_SAPELLIDO AS segundoApellido, ");
+    	query.append("SUM(scm.MON_COMISION_ODS) AS monComisionODS, SUM(scm.MON_COMISION_NCPF) AS monComisionNCPF ");
+    	query.append("FROM SVT_PROMOTOR sp ");
+    	query.append("LEFT JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR ");
     	query.append("WHERE 1 = 1 ");
 		
 		return query;
@@ -122,7 +140,7 @@ public class Promotores {
 			condicion.append(" AND ID_PROMOTOR = ").append(reporteDto.getIdPromotor());
 		}
 		if (reporteDto.getFechaInicial() != null) {
-    		condicion.append(" AND DATE(COM.FEC_ALTA) BETWEEN STR_TO_DATE('" + reporteDto.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + reporteDto.getFechaFinal() + "','" + formatoFecha + "')");
+    		condicion.append(" AND DATE(scm.FEC_ALTA) BETWEEN STR_TO_DATE('" + reporteDto.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + reporteDto.getFechaFinal() + "','" + formatoFecha + "')");
     	}
 	
 		envioDatos.put("condicion", condicion.toString());
