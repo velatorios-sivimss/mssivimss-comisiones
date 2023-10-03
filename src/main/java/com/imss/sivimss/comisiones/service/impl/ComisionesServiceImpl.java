@@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,12 +71,14 @@ public class ComisionesServiceImpl implements ComisionesService {
 	private ProviderServiceRestTemplate providerRestTemplate;
 	
 	private static final Logger log = LoggerFactory.getLogger(ComisionesServiceImpl.class);
+	private Response<Object> response;
 
 	@Override
 	public Response<Object> listaPromotores(DatosRequest request, Authentication authentication) throws IOException {
 		Gson gson = new Gson();
 		
 		String datosJson = String.valueOf(authentication.getPrincipal());
+		datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
 		BusquedaDto busqueda = gson.fromJson(datosJson, BusquedaDto.class);
 		Promotores promotores = new Promotores();
 		
@@ -93,6 +97,7 @@ public class ComisionesServiceImpl implements ComisionesService {
         Gson gson = new Gson();
 		
 		String datosJson = String.valueOf(authentication.getPrincipal());
+		datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
 		BusquedaDto busqueda = gson.fromJson(datosJson, BusquedaDto.class);
 		Promotores promotores = new Promotores();
 		
@@ -100,7 +105,7 @@ public class ComisionesServiceImpl implements ComisionesService {
 		    return (Response<Object>) providerRestTemplate.consumirServicio(promotores.consulta(request, busqueda, formatoFecha).getDatos(), urlDominio + PAGINADO, authentication);
 		} catch (Exception e) {
 			log.error(e.getMessage());
-        	logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);
+        	logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), PAGINADO, authentication);
 			return null;		
 		}
 		
@@ -115,9 +120,6 @@ public class ComisionesServiceImpl implements ComisionesService {
 		
 		datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
 		BusquedaDto busqueda = gson.fromJson(datosJson, BusquedaDto.class);
-		busqueda.setIdOficina(buscaUser.getIdOficina());
-		busqueda.setIdDelegacion(buscaUser.getIdDelegacion());
-		busqueda.setIdVelatorio(buscaUser.getIdVelatorio());
 		Promotores promotores = new Promotores();
 		Response<Object> response = null;
 		
@@ -152,12 +154,15 @@ public class ComisionesServiceImpl implements ComisionesService {
 	@Override
 	public Response<Object> ordenesServicio(DatosRequest request, Authentication authentication) throws IOException {
 		Comisiones comisiones = new Comisiones();
+		Gson gson = new Gson();
+		String datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
+		BusquedaDto busqueda = gson.fromJson(datosJson, BusquedaDto.class);
 		
 		try {
-		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.ordenesServicio(request, formatoFecha).getDatos(), urlDominio + CONSULTA, authentication);
+		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.ordenesServicio(busqueda.getIdPromotor().toString(),request, formatoFecha).getDatos(), urlDominio + PAGINADO, authentication);
 		} catch (Exception e) {
 			 log.error(e.getMessage());
-		     logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);
+		     logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), PAGINADO, authentication);
 			 return null;
 		}
 	}
@@ -165,12 +170,22 @@ public class ComisionesServiceImpl implements ComisionesService {
 	@Override
 	public Response<Object> nuevosConveniosPF(DatosRequest request, Authentication authentication) throws IOException {
         Comisiones comisiones = new Comisiones();
-		
+		String datosJson = String.valueOf(authentication.getPrincipal());
+		datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS)); 
+		Gson gson = new Gson();
+		BusquedaDto busqueda = gson.fromJson(datosJson, BusquedaDto.class);
+		String idPromotor = "" + busqueda.getIdPromotor();
+		request = comisiones.conveniosPF(idPromotor, formatoFecha, request);
+		//request.getDatos().put(AppConstantes.QUERY, query);
+		//request= encodeQuery(query, request);
 		try {
-		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.conveniosPF(request, formatoFecha).getDatos(), urlDominio + CONSULTA, authentication);
+				response=(Response<Object>) providerRestTemplate.consumirServicio(request.getDatos(), urlDominio.concat(PAGINADO), authentication);
+				response= (Response<Object>) MensajeResponseUtil.mensajeConsultaResponse(response, INFONOENCONTRADA);
+
+				return response;
 		} catch (Exception e) {
 			 log.error(e.getMessage());
-		     logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);
+		     logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), PAGINADO, authentication);
 			 return null;
 		}
 	}
@@ -204,16 +219,24 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   }
        
 	   Comisiones comisiones = new Comisiones();
+	   /*
+	    * Se obtiene datos de ODS para el promotor- Fecha Ingreso, Numero de ordenes y monto total de ordenes
+	    */
        Response<?> response1 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoODS(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos1 = (ArrayList) response1.getDatos();
        DatosODSDto datosODSDto = datos1.get(0) == null ? new DatosODSDto() :
     		   new DatosODSDto((String)datos1.get(0).get("fecIngreso"), 
     				   (Integer)datos1.get(0).get("numOrdenes")==null?0:(Integer)datos1.get(0).get("numOrdenes"), 
     				   (Double)datos1.get(0).get("monTotal")==null?0:(Double)datos1.get(0).get("monTotal"));
-       
+
+	   /*
+	    * Se obtiene datos de NCPF para el promotor - Total de Nuevos Convenios PF, Fecha Ingreso del Promotor, Numero de convenios Basico, Monto total Convenios Basicos
+	    * Numero de Convenios Economicos, monto total convenios Economicos , Numero Convenios Cremacion, monto total convenios Cremacion
+	    * 
+	    */
        Response<?> response2 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoNCPF(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
        ArrayList<LinkedHashMap> datos2 = (ArrayList) response2.getDatos();
-       DatosNCPFDto datosNCPFDto = datos2.get(0)==null ? new DatosNCPFDto() : new DatosNCPFDto((String)datos2.get(0).get("fecIngreso"), 
+       DatosNCPFDto datosNCPFDto = datos2.get(0)==null ? new DatosNCPFDto() : new DatosNCPFDto((String)datos2.get(0).get("fecIngresoProm"), 
     				   (Integer)datos2.get(0).get("numBasicos")==null?0:(Integer)datos2.get(0).get("numBasicos"), 
     				   (Integer)datos2.get(0).get("numEconomicos")==null?0:(Integer)datos2.get(0).get("numEconomicos"), 
     		           (Integer)datos2.get(0).get("numCremacion")==null?0:(Integer)datos2.get(0).get("numCremacion"),
@@ -223,6 +246,9 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   
        CalculoMontosDto calculoMontosDto = new CalculoMontosDto();
        try {
+    	   /*
+    	    * Calculo de comision por ODS
+    	    */
     	   calculoMontosDto.setComisionODS(datosODSDto.getFecIngreso()!=null ? comisiones.comisionODS(datosODSDto) : 0d);
        } catch (ParseException e) {
     	   log.error(e.getMessage());
@@ -231,7 +257,14 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   }
        
        try {
+    	   /*
+    	    * Calculo de comision por Nuevo Convenio Plan Funerario
+    	    */
            calculoMontosDto.setComisionNCFP(datosNCPFDto.getFecIngreso()!=null ? comisiones.comisionNCPF(datosNCPFDto) : 0d);
+
+    	   /*
+    	    * Calculo de comision por mes
+    	    */
            calculoMontosDto.setBonoAplicado(datosNCPFDto.getFecIngreso()!=null ? comisiones.bonoAplicado(datosODSDto, datosNCPFDto) : 0d);
            UsuarioDto usuarioDto = gson.fromJson((String) authentication.getPrincipal(), UsuarioDto.class);
            calculoMontosDto.setIdUsuarioAlta(usuarioDto.getIdUsuario());
@@ -241,6 +274,8 @@ public class ComisionesServiceImpl implements ComisionesService {
                 datosNCPFDto.setNumBasicos(0);
                 datosNCPFDto.setNumCremacion(0);
            }
+           Response<Object> actualizaEstatusComision = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.updateEstatusComisionMensual(comisionDto).getDatos(), urlDominio + CREAR, authentication);
+           
            return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarComision(comisionDto, datosODSDto.getNumOrdenes(), 
     		   datosNCPFDto.getNumEconomicos()+datosNCPFDto.getNumBasicos()+datosNCPFDto.getNumCremacion(), 
     		   calculoMontosDto).getDatos(), urlDominio + CREAR, authentication);
@@ -294,7 +329,8 @@ public class ComisionesServiceImpl implements ComisionesService {
 	      
 		Comisiones comisiones = new Comisiones();
 		try {
-		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarDetalle(comisionDto).getDatos(), urlDominio + CREAR, authentication);
+	           //providerRestTemplate.consumirServicio(comisiones.guardarDetalleCNPF(comisionDto).getDatos(), urlDominio + CREAR, authentication);
+		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarDetalleODS(comisionDto).getDatos(), urlDominio + CREAR, authentication);
 		} catch (Exception e) {
 			 log.error(e.getMessage());
 		     logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CREAR, authentication);
