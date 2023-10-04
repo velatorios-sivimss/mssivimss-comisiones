@@ -106,7 +106,7 @@ public class Promotores {
 		query.append("DATE_FORMAT(sp.FEC_INGRESO,'" + formatoFecha + "') AS fecIngreso, ");
 		query.append("sp.MON_SUELDOBASE AS sueldoBase, sv.DES_VELATORIO AS velatorio, (SELECT COUNT(spdd.ID_PROMOTOR_DIAS_DESCANSO) FROM SVT_PROMOTOR_DIAS_DESCANSO spdd WHERE spdd.ID_PROMOTOR = " + idPromotor + ") AS diasDescanso");
 		query.append(",sp.DES_CORREO AS correo, sp.DES_PUESTO AS puesto, sp.DES_CATEGORIA AS categoria");
-		query.append(",(SELECT SUM(scm.MON_COMISION_ODS + scm.MON_COMISION_NCPF) FROM SVT_COMISION_MENSUAL scm WHERE scm.CVE_ESTATUS = 1 AND scm.ID_PROMOTOR = " + idPromotor + " AND DATE_FORMAT(scm.FEC_ALTA, '%m/%Y') = DATE_FORMAT(CURDATE(), '%m/%Y')) AS montoComision");
+		query.append(",(SELECT SUM(scm.MON_COMISION_ODS + scm.MON_COMISION_NCPF) FROM SVT_COMISION_MENSUAL scm WHERE scm.IND_ACTIVO = 1 AND scm.ID_PROMOTOR = " + idPromotor + " AND DATE_FORMAT(scm.FEC_ALTA, '%m/%Y') = DATE_FORMAT(CURDATE(), '%m/%Y')) AS montoComision");
 		query.append(" FROM SVT_PROMOTOR sp ");
 		query.append(" JOIN SVC_VELATORIO sv ON sv.ID_VELATORIO = sp.ID_VELATORIO "); 
 		query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor);
@@ -118,11 +118,12 @@ public class Promotores {
 
     private StringBuilder armaQuery(String formatoFecha) {
     	StringBuilder query = new StringBuilder("SELECT sp.ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, ");
-    	query.append("sp.CVE_CURP AS curp, sp.NOM_PROMOTOR AS nombre, sp.NOM_PAPELLIDO AS primerApellido, sp.NOM_SAPELLIDO AS segundoApellido, ");
-    	query.append("SUM(scm.MON_COMISION_ODS) AS monComisionODS, SUM(scm.MON_COMISION_NCPF) AS monComisionNCPF ");
-    	query.append("FROM SVT_PROMOTOR sp ");
-    	query.append("LEFT JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR ");
-    	query.append("WHERE 1 = 1 ");
+    	query.append("sp.CVE_CURP AS curp, sp.NOM_PROMOTOR AS nombre, sp.NOM_PAPELLIDO AS primerApellido, sp.NOM_SAPELLIDO AS segundoApellido");
+    	query.append(", IFNULL(SUM(scm.MON_COMISION_ODS), 0.0) AS monComisionODS");
+    	query.append(", IFNULL(SUM(scm.MON_COMISION_NCPF), 0.0) AS monComisionNCPF ");
+    	query.append(" FROM SVT_PROMOTOR sp ");
+    	query.append(" LEFT JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR ");
+    	query.append(" WHERE 1 = 1 ");
 		
 		return query;
     }
@@ -137,7 +138,7 @@ public class Promotores {
     		condicion.append(" AND ID_VELATORIO = ").append(reporteDto.getIdVelatorio());
     	}
 		if (reporteDto.getIdPromotor() != null) {
-			condicion.append(" AND ID_PROMOTOR = ").append(reporteDto.getIdPromotor());
+			condicion.append(" AND ID_PROMOTOR = ").append(reporteDto.getIdPromotor());   
 		}
 		if (reporteDto.getFechaInicial() != null) {
     		condicion.append(" AND DATE(scm.FEC_ALTA) BETWEEN STR_TO_DATE('" + reporteDto.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + reporteDto.getFechaFinal() + "','" + formatoFecha + "')");
