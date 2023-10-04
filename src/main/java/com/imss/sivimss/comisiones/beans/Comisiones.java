@@ -105,7 +105,7 @@ public class Comisiones {
 				query.append(", (SUM(scm.NUM_CONVENIOS_PF) * SUM(scm.MON_COMISION_NCPF)) AS monConveniosPF ");
 				query.append(", SUM(scm.MON_BONO_APLICADO) AS monBonoAplicado ");
 				query.append("FROM SVT_COMISION_MENSUAL scm  ");
-		query.append("WHERE scm.CVE_ESTATUS = 1 AND ID_PROMOTOR = " + comisionDto.getIdPromotor());
+		query.append("WHERE scm.IND_ACTIVO = 1 AND ID_PROMOTOR = " + comisionDto.getIdPromotor());
 		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
 		    query.append(" AND NUM_ANIO_COMISION = DATE_FORMAT(CURDATE(),'%Y')");
 		    query.append(" AND NUM_MES_COMISION = DATE_FORMAT(CURDATE(),'%m')");
@@ -248,7 +248,7 @@ public class Comisiones {
 		DatosRequest request = new DatosRequest();
 		Map<String, Object> parametro = new HashMap<>();
 		final QueryHelper q = new QueryHelper("UPDATE SVT_COMISION_MENSUAL");
-		q.agregarParametroValues("CVE_ESTATUS", "0");
+		q.agregarParametroValues("IND_ACTIVO", "0");
 		q.addWhere("ID_PROMOTOR = " + comisionDto.getIdPromotor());
 		q.addColumn("NUM_ANIO_COMISION", comisionDto.getAnioCalculo());
 		q.addColumn("NUM_MES_COMISION", comisionDto.getMesCalculo());
@@ -274,7 +274,7 @@ public class Comisiones {
 		query.append(" JOIN SVC_INFORMACION_SERVICIO sis ON sis.ID_PROMOTORES = sp.ID_PROMOTOR ");
 		query.append(" JOIN SVC_ORDEN_SERVICIO sos ON sos.ID_ORDEN_SERVICIO = sis.ID_ORDEN_SERVICIO AND sos.ID_ESTATUS_ORDEN_SERVICIO IN (4,6) AND DATE_FORMAT(sos.FEC_ALTA, '%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'");
 		query.append("JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO = sos.ID_ORDEN_SERVICIO ");
-		query.append("JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR AND DATE_FORMAT(scm.FEC_ALTA, '%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'").append(" AND scm.CVE_ESTATUS = 1 ");
+		query.append("JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR AND DATE_FORMAT(scm.FEC_ALTA, '%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'").append(" AND scm.IND_ACTIVO = 1 ");
 		query.append(" WHERE sp.ID_PROMOTOR = ").append(comisionDto.getIdPromotor());
 		
 		log.info("guardarDetalle: " + query.toString());	
@@ -299,7 +299,7 @@ public class Comisiones {
 		query.append(" JOIN SVT_CONVENIO_PF scp ON scp.ID_PROMOTOR = sp.ID_PROMOTOR ");
 		query.append(" JOIN SVT_CONTRATANTE_PAQUETE_CONVENIO_PF scpcp ON scpcp.ID_CONVENIO_PF = scp.ID_CONVENIO_PF AND scpcp.ID_PAQUETE IN (7,8,9) ");
 		query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO = scp.ID_CONVENIO_PF AND spb.ID_FLUJO_PAGOS = 2 AND spb.CVE_ESTATUS_PAGO = 5 ");
-		query.append(" JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR AND DATE_FORMAT(scm.FEC_ALTA, '%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'").append(" AND scm.CVE_ESTATUS = 1 ");
+		query.append(" JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR AND DATE_FORMAT(scm.FEC_ALTA, '%Y%m') = '").append(comisionDto.getAnioCalculo()).append(comisionDto.getMesCalculo()).append("'").append(" AND scm.IND_ACTIVO = 1 ");
 		query.append(" WHERE sp.ID_PROMOTOR = ").append(comisionDto.getIdPromotor());
 		
 		log.info("guardarDetalle: " + query.toString());	
