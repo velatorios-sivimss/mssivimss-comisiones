@@ -24,19 +24,19 @@ public class ReporteDetalleDto {
 	private String fecNacimiento;
 	private String fecIngreso;
 	private String velatorio;
-	private Double sueldoBase;
+	private Integer sueldoBase;
 	private String puesto;
 	private String correo;
 	private String categoria;
 	private String diasDescanso;
-	private Double monComision;
+	private Integer monComision;
 
 	// Datos Comisión
 	private Integer numOrdenesServicio;
-	private Double monComisionODS;
+	private Integer monComisionODS;
 	private Integer numConveniosPF;
-	private Double monConveniosPF;
-	private Double monBonoAplicado;
+	private Integer monConveniosPF;
+	private Integer monBonoAplicado;
 	
 	private String tipoReporte;
 	

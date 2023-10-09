@@ -222,9 +222,9 @@ public class ComisionesServiceImpl implements ComisionesService {
 	   /*
 	    * Se obtiene datos de ODS para el promotor- Fecha Ingreso, Numero de ordenes y monto total de ordenes
 	    */
-       Response<?> response1 = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoODS(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
-       ArrayList<LinkedHashMap> datos1 = (ArrayList) response1.getDatos();
-       DatosODSDto datosODSDto = datos1.get(0) == null ? new DatosODSDto() :
+       Response<?> calculoODS = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.datosCalculoODS(request, comisionDto).getDatos(), urlDominio + CONSULTA, authentication);
+       ArrayList<LinkedHashMap> datos1 = (ArrayList) calculoODS.getDatos();
+       DatosODSDto datosCalculoODSDto = datos1.get(0) == null ? new DatosODSDto() :
     		   new DatosODSDto((String)datos1.get(0).get("fecIngreso"), 
     				   (Integer)datos1.get(0).get("numOrdenes")==null?0:(Integer)datos1.get(0).get("numOrdenes"), 
     				   (Double)datos1.get(0).get("monTotal")==null?0:(Double)datos1.get(0).get("monTotal"));
@@ -249,7 +249,7 @@ public class ComisionesServiceImpl implements ComisionesService {
     	   /*
     	    * Calculo de comision por ODS
     	    */
-    	   calculoMontosDto.setComisionODS(datosODSDto.getFecIngreso()!=null ? comisiones.comisionODS(datosODSDto) : 0d);
+    	   calculoMontosDto.setComisionODS(datosCalculoODSDto.getFecIngreso()!=null ? comisiones.comisionODS(datosCalculoODSDto) : 0d);
        } catch (ParseException e) {
     	   log.error(e.getMessage());
 		   logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);
@@ -265,7 +265,7 @@ public class ComisionesServiceImpl implements ComisionesService {
     	   /*
     	    * Calculo de comision por mes
     	    */
-           calculoMontosDto.setBonoAplicado(datosNCPFDto.getFecIngreso()!=null ? comisiones.bonoAplicado(datosODSDto, datosNCPFDto) : 0d);
+           calculoMontosDto.setBonoAplicado(datosNCPFDto.getFecIngreso()!=null ? comisiones.bonoAplicado(datosCalculoODSDto, datosNCPFDto) : 0d);
            UsuarioDto usuarioDto = gson.fromJson((String) authentication.getPrincipal(), UsuarioDto.class);
            calculoMontosDto.setIdUsuarioAlta(usuarioDto.getIdUsuario());
            
@@ -276,7 +276,7 @@ public class ComisionesServiceImpl implements ComisionesService {
            }
            Response<Object> actualizaEstatusComision = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.updateEstatusComisionMensual(comisionDto).getDatos(), urlDominio + CREAR, authentication);
            
-           return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarComision(comisionDto, datosODSDto.getNumOrdenes(), 
+           return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarComision(comisionDto, datosCalculoODSDto.getNumOrdenes(), 
     		   datosNCPFDto.getNumEconomicos()+datosNCPFDto.getNumBasicos()+datosNCPFDto.getNumCremacion(), 
     		   calculoMontosDto).getDatos(), urlDominio + CREAR, authentication);
        } catch (Exception e) {
