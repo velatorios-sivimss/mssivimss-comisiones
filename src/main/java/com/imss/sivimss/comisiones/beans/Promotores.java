@@ -54,9 +54,9 @@ public class Promotores {
 		StringBuilder query = armaQuery(formatoFecha);
 
 		if(busqueda.getIdDelegacion()!= null)
-    		query.append(" AND ID_DELEGACION = ").append(busqueda.getIdDelegacion());
+    		query.append(" AND VEL.ID_DELEGACION = ").append(busqueda.getIdDelegacion());
 		if (busqueda.getIdVelatorio() != null)
-    		query.append(" AND ID_VELATORIO = ").append(busqueda.getIdVelatorio());
+    		query.append(" AND VEL.ID_VELATORIO = ").append(busqueda.getIdVelatorio());
 		if (busqueda.getIdPromotor() != null)
 			query.append(" AND sp.ID_PROMOTOR = ").append(busqueda.getIdPromotor());
 		if (busqueda.getFechaInicial() != null && busqueda.getFechaFinal() != null)
@@ -78,9 +78,9 @@ public class Promotores {
 		StringBuilder query = armaQuery(formatoFecha);
 		
 		if(busqueda.getIdDelegacion()!= null)
-    		query.append(" AND ID_DELEGACION = ").append(busqueda.getIdDelegacion());
+    		query.append(" AND VEL.ID_DELEGACION = ").append(busqueda.getIdDelegacion());
 		if (busqueda.getIdVelatorio() != null)
-    		query.append(" AND ID_VELATORIO = ").append(busqueda.getIdVelatorio());
+    		query.append(" AND VEL.ID_VELATORIO = ").append(busqueda.getIdVelatorio());
 		if (busqueda.getIdPromotor() != null)
 			query.append(" AND sp.ID_PROMOTOR = ").append(busqueda.getIdPromotor());
 		if (busqueda.getFechaInicial() != null && busqueda.getFechaFinal() != null)
@@ -117,13 +117,23 @@ public class Promotores {
 	}
 
     private StringBuilder armaQuery(String formatoFecha) {
-    	StringBuilder query = new StringBuilder("SELECT sp.ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, ");
-    	query.append("sp.CVE_CURP AS curp, sp.NOM_PROMOTOR AS nombre, sp.NOM_PAPELLIDO AS primerApellido, sp.NOM_SAPELLIDO AS segundoApellido");
-    	query.append(", IFNULL(SUM(scm.IMP_COMISION_ODS), 0.0) AS monComisionODS");
-    	query.append(", IFNULL(SUM(scm.IMP_COMISION_NCPF), 0.0) AS monComisionNCPF ");
-    	query.append(" FROM SVT_PROMOTOR sp ");
-    	query.append(" LEFT JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR ");
-    	query.append(" WHERE 1 = 1 ");
+    	StringBuilder query = new StringBuilder("SELECT \r\n"
+    			+ "sp.ID_PROMOTOR AS idPromotor, \r\n"
+    			+ "NUM_EMPLEDO AS numEmpleado, \r\n"
+    			+ "sp.CVE_CURP AS curp, \r\n"
+    			+ "sp.NOM_PROMOTOR AS nombre, \r\n"
+    			+ "sp.NOM_PAPELLIDO AS primerApellido, \r\n"
+    			+ "sp.NOM_SAPELLIDO AS segundoApellido, \r\n"
+    			+ "IFNULL(\r\n"
+    			+ "SUM(scm.IMP_COMISION_ODS), 0.0\r\n"
+    			+ ") AS monComisionODS, \r\n"
+    			+ "IFNULL(\r\n"
+    			+ "SUM(scm.IMP_COMISION_NCPF), 0.0\r\n"
+    			+ ") AS monComisionNCPF  \r\n"
+    			+ "FROM SVT_PROMOTOR sp\r\n"
+    			+ "INNER JOIN SVC_VELATORIO VEL ON VEL.ID_VELATORIO = sp.ID_VELATORIO\r\n"
+    			+ "LEFT JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR  \r\n"
+    			+ "WHERE 1 = 1 ");
 		
 		return query;
     }
