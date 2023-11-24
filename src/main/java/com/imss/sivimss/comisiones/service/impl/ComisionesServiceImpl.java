@@ -94,10 +94,9 @@ public class ComisionesServiceImpl implements ComisionesService {
 
 	@Override
 	public Response<Object> consulta(DatosRequest request, Authentication authentication) throws IOException {
-        Gson gson = new Gson();
-		
-		String datosJson = String.valueOf(authentication.getPrincipal());
-		datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
+        
+		Gson gson = new Gson();
+		String  datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
 		BusquedaDto busqueda = gson.fromJson(datosJson, BusquedaDto.class);
 		Promotores promotores = new Promotores();
 		
@@ -288,15 +287,10 @@ public class ComisionesServiceImpl implements ComisionesService {
 	
 	@Override
 	public Response<Object> descargarDocto(DatosRequest request, Authentication authentication) throws IOException {
-        Gson gson = new Gson();
-		
-		String datosJson = String.valueOf(authentication.getPrincipal());
-		BusquedaDto buscaUser = gson.fromJson(datosJson, BusquedaDto.class);
-		
-		datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
+        
+		Gson gson = new Gson();
+		String  datosJson = String.valueOf(request.getDatos().get(AppConstantes.DATOS));
 		BusquedaDto reporteDto = gson.fromJson(datosJson, BusquedaDto.class);
-		reporteDto.setIdOficina(buscaUser.getIdOficina());
-		reporteDto.setIdDelegacion(buscaUser.getIdDelegacion());
 		
 		Map<String, Object> envioDatos = new Promotores().generarReporte(reporteDto, NOMBREPDFREPORTE, formatoFecha);
 		Response<Object> response =  (Response<Object>) providerRestTemplate.consumirServicioReportes(envioDatos, urlReportes, authentication);
