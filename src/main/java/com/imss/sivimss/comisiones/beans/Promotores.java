@@ -143,12 +143,12 @@ public class Promotores {
 		StringBuilder condicion = new StringBuilder("");
 		
 		if (reporteDto.getIdOficina().equals(NIVEL_DELEGACION)) {
-    		condicion.append(" AND ID_DELEGACION = ").append(reporteDto.getIdDelegacion());
+    		condicion.append(" AND VEL.ID_DELEGACION = ").append(reporteDto.getIdDelegacion());
     	} else if (reporteDto.getIdOficina().equals(NIVEL_VELATORIO)) {
-    		condicion.append(" AND ID_VELATORIO = ").append(reporteDto.getIdVelatorio());
+    		condicion.append(" AND VEL.ID_VELATORIO = ").append(reporteDto.getIdVelatorio());
     	}
 		if (reporteDto.getIdPromotor() != null) {
-			condicion.append(" AND ID_PROMOTOR = ").append(reporteDto.getIdPromotor());   
+			condicion.append(" AND sp.ID_PROMOTOR = ").append(reporteDto.getIdPromotor());   
 		}
 		if (reporteDto.getFechaInicial() != null) {
     		condicion.append(" AND DATE(scm.FEC_ALTA) BETWEEN STR_TO_DATE('" + reporteDto.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + reporteDto.getFechaFinal() + "','" + formatoFecha + "')");
