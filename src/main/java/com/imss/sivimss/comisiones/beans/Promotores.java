@@ -133,7 +133,7 @@ public class Promotores {
     			+ "FROM SVT_PROMOTOR sp\r\n"
     			+ "INNER JOIN SVC_VELATORIO VEL ON VEL.ID_VELATORIO = sp.ID_VELATORIO\r\n"
     			+ "LEFT JOIN SVT_COMISION_MENSUAL scm ON scm.ID_PROMOTOR = sp.ID_PROMOTOR  \r\n"
-    			+ "WHERE 1 = 1 ");
+    			+ "WHERE sp.IND_ACTIVO = '1' ");
 		
 		return query;
     }
@@ -142,18 +142,18 @@ public class Promotores {
 		Map<String, Object> envioDatos = new HashMap<>();
 		StringBuilder condicion = new StringBuilder("");
 		
-		if (reporteDto.getIdOficina().equals(NIVEL_DELEGACION)) {
+		if(reporteDto.getIdDelegacion()!= null)
     		condicion.append(" AND VEL.ID_DELEGACION = ").append(reporteDto.getIdDelegacion());
-    	} else if (reporteDto.getIdOficina().equals(NIVEL_VELATORIO)) {
+    	
+		if (reporteDto.getIdVelatorio() != null)
     		condicion.append(" AND VEL.ID_VELATORIO = ").append(reporteDto.getIdVelatorio());
-    	}
-		if (reporteDto.getIdPromotor() != null) {
+    	
+		if (reporteDto.getIdPromotor() != null) 
 			condicion.append(" AND sp.ID_PROMOTOR = ").append(reporteDto.getIdPromotor());   
-		}
-		if (reporteDto.getFechaInicial() != null) {
+		
+		if (reporteDto.getFechaInicial() != null) 
     		condicion.append(" AND DATE(scm.FEC_ALTA) BETWEEN STR_TO_DATE('" + reporteDto.getFechaInicial() + "','" + formatoFecha + "') AND STR_TO_DATE('" + reporteDto.getFechaFinal() + "','" + formatoFecha + "')");
-    	}
-	
+    	
 		envioDatos.put("condicion", condicion.toString());
 		envioDatos.put("tipoReporte", reporteDto.getTipoReporte());
 		envioDatos.put("rutaNombreReporte", nombrePdfReportes);
