@@ -29,19 +29,25 @@ public class Promotores {
 	public DatosRequest listaPromotores(BusquedaDto busqueda) throws UnsupportedEncodingException {
 		DatosRequest request = new DatosRequest();
 		Map<String, Object> parametro = new HashMap<>();
-    	StringBuilder query = new StringBuilder("SELECT ID_PROMOTOR AS idPromotor, NUM_EMPLEDO AS numEmpleado, ");
-    	query.append("CONCAT(NOM_PROMOTOR,' ',NOM_PAPELLIDO,' ',NOM_SAPELLIDO) AS nomPromotor ");
-    	query.append("FROM SVT_PROMOTOR ");
+    	StringBuilder query = new StringBuilder("SELECT \r\n"
+    			+ "ID_PROMOTOR AS idPromotor, \r\n"
+    			+ "NUM_EMPLEDO AS numEmpleado, \r\n"
+    			+ "CONCAT(NOM_PROMOTOR,' ',NOM_PAPELLIDO,' ',NOM_SAPELLIDO) AS nomPromotor \r\n"
+    			+ "FROM SVT_PROMOTOR PRO\r\n"
+    			+ "INNER JOIN SVC_VELATORIO VEL ON VEL.ID_VELATORIO = PRO.ID_VELATORIO  \r\n"
+    			+ "WHERE \r\n"
+    			+ "PRO.IND_ACTIVO =  '1'\r\n"
+    			);
+    	
+    	
     	if (busqueda.getIdDelegacion() != null) {
-    		query.append(" WHERE ID_DELEGACION = ").append(busqueda.getIdDelegacion());
-    		if(busqueda.getIdVelatorio() != null)
-        		query.append(" AND ID_VELATORIO = ").append(busqueda.getIdVelatorio());
-    		query.append(" AND IND_ACTIVO =  1");
-    	}else if(busqueda.getIdVelatorio() != null) {
-    		query.append(" WHERE ID_VELATORIO = ").append(busqueda.getIdVelatorio());
-    		query.append(" AND IND_ACTIVO =  1");
-    	}else 
-    		query.append(" WHERE IND_ACTIVO =  1");
+    		query.append("AND VEL.ID_DELEGACION = ").append(busqueda.getIdDelegacion() + "\r\n");
+    	}
+    	
+    	if(busqueda.getIdVelatorio() != null) {
+    		query.append("AND VEL.ID_VELATORIO = ").append(busqueda.getIdVelatorio() + "\r\n");
+    		
+    	}
 
 		log.info(query.toString());
     	String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
