@@ -175,8 +175,6 @@ public class ComisionesServiceImpl implements ComisionesService {
 		BusquedaDto busqueda = gson.fromJson(datosJson, BusquedaDto.class);
 		String idPromotor = "" + busqueda.getIdPromotor();
 		request = comisiones.conveniosPF(idPromotor, formatoFecha, request);
-		//request.getDatos().put(AppConstantes.QUERY, query);
-		//request= encodeQuery(query, request);
 		try {
 				response=(Response<Object>) providerRestTemplate.consumirServicio(request.getDatos(), urlDominio.concat(PAGINADO), authentication);
 				response= (Response<Object>) MensajeResponseUtil.mensajeConsultaResponse(response, INFONOENCONTRADA);
@@ -200,7 +198,7 @@ public class ComisionesServiceImpl implements ComisionesService {
        Comisiones comisiones = new Comisiones();
 		
 		try {
-		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.detComisiones(request, comisionDto, formatoFecha).getDatos(), urlDominio + CONSULTA, authentication);
+		     return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.detComisiones(request, comisionDto, formatoFecha).getDatos(), urlDominio.concat(PAGINADO), authentication);
 		} catch (Exception e) {
 			 log.error(e.getMessage());
 		     logUtil.crearArchivoLog(Level.SEVERE.toString(), this.getClass().getSimpleName(), this.getClass().getPackage().toString(), e.getMessage(), CONSULTA, authentication);
