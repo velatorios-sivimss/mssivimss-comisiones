@@ -57,7 +57,6 @@ public class Comisiones {
 				query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO = sos.ID_ORDEN_SERVICIO AND spb.ID_FLUJO_PAGOS = 1  ");
 				query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor + " AND sos.ID_ESTATUS_ORDEN_SERVICIO IN (4,6)  ");
 				query.append(" AND DATE_FORMAT(sos.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y')  ");
-				query.append(" GROUP BY fechaODS, cveFolio, nomFinado, lugarCaptacion, importeODS");
 		log.info(query.toString());
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes(StandardCharsets.UTF_8));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
@@ -85,7 +84,6 @@ public class Comisiones {
 				query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO =  scp.ID_CONVENIO_PF  AND spb.ID_FLUJO_PAGOS = 2  ");
 				query.append(" JOIN SVT_PAGO_DETALLE spd2 ON spd2.ID_PAGO_BITACORA = spb.ID_PAGO_BITACORA  ");
 				query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor +"  AND DATE_FORMAT(scp.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y')  ");
-				query.append(" GROUP BY fechaCPF, folioNCPF, nomContratante, lugarCaptacion, importeCPF ");
 		log.info(query.toString());
 		
 		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes(StandardCharsets.UTF_8));
