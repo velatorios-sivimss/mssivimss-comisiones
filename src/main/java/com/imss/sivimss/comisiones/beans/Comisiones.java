@@ -242,12 +242,12 @@ public class Comisiones {
 		Map<String, Object> parametro = new HashMap<>();
 		final QueryHelper q = new QueryHelper("UPDATE SVT_COMISION_MENSUAL");
 		q.agregarParametroValues("IND_ACTIVO", "0");
-		q.addWhere("ID_PROMOTOR = " + comisionDto.getIdPromotor());
-		q.addColumn("NUM_ANIO_COMISION", comisionDto.getAnioCalculo());
-		q.addColumn("NUM_MES_COMISION", comisionDto.getMesCalculo());
+		q.addWhere(" ID_PROMOTOR = " + comisionDto.getIdPromotor());
+		q.addWhere(" AND NUM_ANIO_COMISION = " + comisionDto.getAnioCalculo());
+		q.addWhere(" AND NUM_MES_COMISION = " + comisionDto.getMesCalculo());
 		String query = q.obtenerQueryActualizar();
 		
-		log.info("guardarComision: " + query.toString());		
+		log.info("actualizaEstatus: " + query.toString());		
 		String encoded = DatatypeConverter.printBase64Binary(query.getBytes(StandardCharsets.UTF_8));
 		parametro.put(AppConstantes.QUERY, encoded);
 		request.setDatos(parametro);
@@ -333,6 +333,10 @@ public class Comisiones {
 		
 		envioDatos.put("tipoReporte", reporteDto.getTipoReporte());
 		envioDatos.put("rutaNombreReporte", nombrePdfReportes);
+
+		if (reporteDto.getTipoReporte().equals("xls")) {
+			envioDatos.put("IS_IGNORE_PAGINATION", true);
+		}
 		
 		return envioDatos;
     }

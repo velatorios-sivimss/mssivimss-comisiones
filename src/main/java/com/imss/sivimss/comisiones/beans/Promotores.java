@@ -1,6 +1,6 @@
 package com.imss.sivimss.comisiones.beans;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,7 +26,7 @@ public class Promotores {
 
 	private static final Logger log = LoggerFactory.getLogger(Promotores.class);
 	
-	public DatosRequest listaPromotores(BusquedaDto busqueda) throws UnsupportedEncodingException {
+	public DatosRequest listaPromotores(BusquedaDto busqueda) {
 		DatosRequest request = new DatosRequest();
 		Map<String, Object> parametro = new HashMap<>();
     	StringBuilder query = new StringBuilder("SELECT \r\n"
@@ -50,13 +50,13 @@ public class Promotores {
     	}
 
 		log.info(query.toString());
-    	String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
+    	String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes(StandardCharsets.UTF_8));
 		parametro.put(AppConstantes.QUERY, encoded);
 		request.setDatos(parametro);
 		return request;
 	}
 	
-	public DatosRequest consulta(DatosRequest request, BusquedaDto busqueda, String formatoFecha) throws UnsupportedEncodingException {
+	public DatosRequest consulta(DatosRequest request, BusquedaDto busqueda, String formatoFecha) {
 		StringBuilder query = armaQuery(formatoFecha);
 
 		if(busqueda.getIdDelegacion()!= null)
@@ -74,13 +74,13 @@ public class Promotores {
     	query.append(" GROUP BY idPromotor, numEmpleado, curp, nombre, primerApellido, segundoApellido");
 
 		log.info(query.toString());
-		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
+		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes(StandardCharsets.UTF_8));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
     	
     	return request;
 	}
 	
-	public DatosRequest busqueda(DatosRequest request, BusquedaDto busqueda, String formatoFecha) throws UnsupportedEncodingException {
+	public DatosRequest busqueda(DatosRequest request, BusquedaDto busqueda, String formatoFecha) {
 		StringBuilder query = armaQuery(formatoFecha);
 		
 		if(busqueda.getIdDelegacion()!= null)
@@ -98,13 +98,13 @@ public class Promotores {
 		
 		query.append(" GROUP BY idPromotor, numEmpleado, curp, nombre, primerApellido, segundoApellido");
 		log.info(query.toString());
-		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
+		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes(StandardCharsets.UTF_8));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
     	
     	return request;
 	}
 	
-	public DatosRequest detalle(DatosRequest request, String formatoFecha) throws UnsupportedEncodingException {
+	public DatosRequest detalle(DatosRequest request, String formatoFecha) {
 		String idPromotor = request.getDatos().get("id").toString();
 		StringBuilder query = new StringBuilder("SELECT sp.ID_PROMOTOR AS idPromotor, sp.NUM_EMPLEDO AS numEmpleado,");
 		query.append("sp.CVE_CURP AS curp, sp.NOM_PROMOTOR AS nombre, sp.NOM_PAPELLIDO AS primerApellido, sp.NOM_SAPELLIDO AS segundoApellido, ");
@@ -112,12 +112,12 @@ public class Promotores {
 		query.append("DATE_FORMAT(sp.FEC_INGRESO,'" + formatoFecha + "') AS fecIngreso, ");
 		query.append("sp.MON_SUELDOBASE AS sueldoBase, sv.DES_VELATORIO AS velatorio, (SELECT COUNT(spdd.ID_PROMOTOR_DIAS_DESCANSO) FROM SVT_PROMOTOR_DIAS_DESCANSO spdd WHERE spdd.ID_PROMOTOR = " + idPromotor + ") AS diasDescanso");
 		query.append(",sp.REF_CORREO AS correo, sp.REF_PUESTO AS puesto, sp.REF_CATEGORIA AS categoria");
-		query.append(",(SELECT SUM(scm.IMP_COMISION_ODS + scm.IMP_COMISION_NCPF) FROM SVT_COMISION_MENSUAL scm WHERE scm.IND_ACTIVO = 1 AND scm.ID_PROMOTOR = " + idPromotor + " AND DATE_FORMAT(scm.FEC_ALTA, '%m/%Y') = DATE_FORMAT(CURDATE(), '%m/%Y')) AS montoComision");
+		query.append(",(SELECT (scm.IMP_COMISION_ODS + scm.IMP_COMISION_NCPF + scm.IMP_BONO_APLICADO ) FROM SVT_COMISION_MENSUAL scm WHERE scm.IND_ACTIVO = 1 AND scm.ID_PROMOTOR = " + idPromotor + " AND DATE_FORMAT(scm.FEC_ALTA, '%m/%Y') = DATE_FORMAT(CURDATE(), '%m/%Y')) AS montoComision");
 		query.append(" FROM SVT_PROMOTOR sp ");
 		query.append(" JOIN SVC_VELATORIO sv ON sv.ID_VELATORIO = sp.ID_VELATORIO "); 
 		query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor);
 		log.info(query.toString());
-		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes("UTF-8"));
+		String encoded = DatatypeConverter.printBase64Binary(query.toString().getBytes(StandardCharsets.UTF_8));
 		request.getDatos().put(AppConstantes.QUERY, encoded);
 		return request;
 	}
