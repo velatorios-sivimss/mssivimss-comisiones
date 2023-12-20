@@ -271,7 +271,7 @@ public class ComisionesServiceImpl implements ComisionesService {
                 datosNCPFDto.setNumBasicos(0);
                 datosNCPFDto.setNumCremacion(0);
            }
-           Response<Object> actualizaEstatusComision = (Response<Object>) providerRestTemplate.consumirServicio(comisiones.updateEstatusComisionMensual(comisionDto).getDatos(), urlDominio + CREAR, authentication);
+            providerRestTemplate.consumirServicio(comisiones.updateEstatusComisionMensual(comisionDto).getDatos(), urlDominio + CREAR, authentication);
            
            return (Response<Object>) providerRestTemplate.consumirServicio(comisiones.guardarComision(comisionDto, datosCalculoODSDto.getNumOrdenes(), 
     		   datosNCPFDto.getNumEconomicos()+datosNCPFDto.getNumBasicos()+datosNCPFDto.getNumCremacion(), 
@@ -306,6 +306,7 @@ public class ComisionesServiceImpl implements ComisionesService {
 		}
 		log.info(NOMBREPDFREPDETALLE);
 		Map<String, Object> envioDatos = new Comisiones().generarReporte(repoDetalleDto, NOMBREPDFREPDETALLE);
+
 		Response<Object> response =  (Response<Object>) providerRestTemplate.consumirServicioReportes(envioDatos, urlReportes, authentication);
 		return (Response<Object>) MensajeResponseUtil.mensajeConsultaResponse(response, ERROR_DESCARGA);
 	}
