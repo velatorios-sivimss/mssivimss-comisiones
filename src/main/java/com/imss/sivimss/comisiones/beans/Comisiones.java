@@ -92,11 +92,11 @@ public class Comisiones {
 	}
 
 	public DatosRequest detComisiones(DatosRequest request, ComisionDto comisionDto, String formatoFecha) {
-		StringBuilder query = new StringBuilder("SELECT SUM(scm.NUM_ORDENES_SERVICIO) AS numOrdenesServicio ");
-				query.append(", (SUM(scm.IMP_COMISION_ODS) * SUM(scm.NUM_ORDENES_SERVICIO)) AS monComisionODS ");
-				query.append(", SUM(scm.NUM_CONVENIOS_PF) AS numConveniosPF ");
-				query.append(", (SUM(scm.NUM_CONVENIOS_PF) * SUM(scm.IMP_COMISION_NCPF)) AS monConveniosPF ");
-				query.append(", SUM(scm.IMP_BONO_APLICADO) AS monBonoAplicado ");
+		StringBuilder query = new StringBuilder("SELECT IFNULL(SUM(scm.NUM_ORDENES_SERVICIO),0) AS numOrdenesServicio ");
+				query.append(", IFNULL((SUM(scm.IMP_COMISION_ODS) * SUM(scm.NUM_ORDENES_SERVICIO)),0) AS monComisionODS ");
+				query.append(", IFNULL(SUM(scm.NUM_CONVENIOS_PF),0) AS numConveniosPF ");
+				query.append(", IFNULL((SUM(scm.NUM_CONVENIOS_PF) * SUM(scm.IMP_COMISION_NCPF)),0) AS monConveniosPF ");
+				query.append(", IFNULL(SUM(scm.IMP_BONO_APLICADO),0) AS monBonoAplicado ");
 				query.append("FROM SVT_COMISION_MENSUAL scm  ");
 		query.append("WHERE scm.IND_ACTIVO = 1 AND ID_PROMOTOR = " + comisionDto.getIdPromotor());
 		if (comisionDto.getAnioCalculo() == null || comisionDto.getMesCalculo() == null) {
