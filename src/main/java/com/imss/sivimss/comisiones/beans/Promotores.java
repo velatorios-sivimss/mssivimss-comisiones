@@ -112,7 +112,8 @@ public class Promotores {
 		query.append("DATE_FORMAT(sp.FEC_INGRESO,'" + formatoFecha + "') AS fecIngreso, ");
 		query.append("sp.MON_SUELDOBASE AS sueldoBase, sv.DES_VELATORIO AS velatorio, (SELECT COUNT(spdd.ID_PROMOTOR_DIAS_DESCANSO) FROM SVT_PROMOTOR_DIAS_DESCANSO spdd WHERE spdd.ID_PROMOTOR = " + idPromotor + ") AS diasDescanso");
 		query.append(",sp.REF_CORREO AS correo, sp.REF_PUESTO AS puesto, sp.REF_CATEGORIA AS categoria");
-		query.append(",(SELECT (scm.IMP_COMISION_ODS + scm.IMP_COMISION_NCPF + scm.IMP_BONO_APLICADO ) FROM SVT_COMISION_MENSUAL scm WHERE scm.IND_ACTIVO = 1 AND scm.ID_PROMOTOR = " + idPromotor + " AND DATE_FORMAT(scm.FEC_ALTA, '%m/%Y') = DATE_FORMAT(CURDATE(), '%m/%Y')) AS montoComision");
+		query.append(",(SELECT (scm.IMP_COMISION_ODS + scm.IMP_COMISION_NCPF + scm.IMP_BONO_APLICADO ) FROM SVT_COMISION_MENSUAL scm WHERE scm.IND_ACTIVO = 1 AND scm.ID_PROMOTOR = " + idPromotor + " AND DATE_FORMAT(scm.FEC_ALTA, '%m/%Y') = DATE_FORMAT(CURDATE(), '%m/%Y')");
+		query.append("     AND scm.NUM_MES_COMISION = CAST(DATE_FORMAT(CURDATE(), '%m') AS SIGNED) AND scm.NUM_ANIO_COMISION = DATE_FORMAT(CURDATE(), '%Y')) AS montoComision");
 		query.append(" FROM SVT_PROMOTOR sp ");
 		query.append(" JOIN SVC_VELATORIO sv ON sv.ID_VELATORIO = sp.ID_VELATORIO "); 
 		query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor);
