@@ -324,7 +324,7 @@ public class Comisiones {
 		envioDatos.put("correo", reporteDto.getCorreo());
 		envioDatos.put("categoria", reporteDto.getCategoria());
 		envioDatos.put("diasDescanso", reporteDto.getDiasDescanso());
-		envioDatos.put("montoComision", reporteDto.getMonComision().toString());
+		envioDatos.put("montoComision", reporteDto.getMonComision()== null ? "0" : reporteDto.getMonComision().toString());
 		envioDatos.put("numOrdenesServicio", reporteDto.getNumOrdenesServicio().toString());
 		envioDatos.put("monComisionODS", reporteDto.getMonComisionODS().toString());
 		envioDatos.put("numConveniosPF", reporteDto.getNumConveniosPF().toString());
