@@ -82,7 +82,7 @@ public class Comisiones {
 				query.append(" JOIN SVC_PERSONA sp2 ON sp2.ID_PERSONA = sc.ID_PERSONA  ");
 				query.append(" JOIN SVC_VELATORIO sv ON sv.ID_VELATORIO = scp.ID_VELATORIO   ");
 				query.append(" JOIN SVT_PAGO_BITACORA spb ON spb.ID_REGISTRO =  scp.ID_CONVENIO_PF  AND spb.ID_FLUJO_PAGOS = 2  ");
-				query.append(" JOIN SVT_PAGO_DETALLE spd2 ON spd2.ID_PAGO_BITACORA = spb.ID_PAGO_BITACORA  ");
+				query.append(" LEFT JOIN SVT_PAGO_DETALLE spd2 ON spd2.ID_PAGO_BITACORA = spb.ID_PAGO_BITACORA  ");
 				query.append(" WHERE sp.ID_PROMOTOR = " + idPromotor +"  AND DATE_FORMAT(scp.FEC_ALTA,'%m/%Y') = DATE_FORMAT(CURDATE(),'%m/%Y')  ");
 		log.info(query.toString());
 		
